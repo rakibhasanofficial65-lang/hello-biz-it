@@ -71,7 +71,7 @@ require_once __DIR__ . '/functions.php';
         ======================================= -->
 
         <a
-            href="/hello-biz-it/index.php"
+            href="/index.php"
             class="brand-logo"
             aria-label="Hello Biz IT Home"
         >
@@ -94,35 +94,35 @@ require_once __DIR__ . '/functions.php';
         >
 
             <a
-                href="/hello-biz-it/index.php"
+               href="/index.php"
                 class="nav-link"
             >
                 Home
             </a>
 
             <a
-                href="/hello-biz-it/about.php"
+                href="/about.php"
                 class="nav-link"
             >
                 About
             </a>
 
             <a
-                href="/hello-biz-it/services.php"
+                href="/services.php"
                 class="nav-link"
             >
                 Services
             </a>
 
             <a
-                href="/hello-biz-it/career.php"
+                href="/career.php"
                 class="nav-link"
             >
                 Career
             </a>
 
             <a
-                href="/hello-biz-it/contact.php"
+                href="/contact.php"
                 class="nav-link"
             >
                 Contact
@@ -136,7 +136,7 @@ require_once __DIR__ . '/functions.php';
         ======================================= -->
 
         <a
-            href="/hello-biz-it/contact.php"
+            href="/contact.php"
             class="nav-contact-btn"
         >
 
