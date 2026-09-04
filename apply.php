@@ -5,7 +5,6 @@ declare(strict_types=1);
 require_once __DIR__ . '/includes/config.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/database.php';
-require_once __DIR__ . '/includes/blob.php';
 
 $page_title = "Apply Now | " . SITE_NAME;
 
@@ -56,7 +55,7 @@ if (!$job) {
 
 /*
 |--------------------------------------------------------------------------
-| VARIABLES
+| FORM VARIABLES
 |--------------------------------------------------------------------------
 */
 
@@ -71,6 +70,159 @@ $address = '';
 $computer_available = '';
 $laptop_available = '';
 $message = '';
+
+
+/*
+|--------------------------------------------------------------------------
+| VERCEL BLOB UPLOAD FUNCTION
+|--------------------------------------------------------------------------
+|
+| Vercel filesystem is NOT persistent.
+| Therefore files are uploaded to Vercel Blob.
+|
+*/
+
+function uploadToVercelBlob(
+    array $file,
+    string $folder,
+    string $extension
+): string {
+
+    $token = getenv('BLOB_READ_WRITE_TOKEN') ?: '';
+
+    if ($token === '') {
+        throw new RuntimeException(
+            'BLOB_READ_WRITE_TOKEN is not configured.'
+        );
+    }
+
+    if (!isset($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
+        throw new RuntimeException(
+            'Uploaded file is not valid.'
+        );
+    }
+
+    /*
+     * Generate a unique filename.
+     */
+
+    $filename =
+        $folder .
+        '/' .
+        date('Y/m') .
+        '/' .
+        bin2hex(random_bytes(16)) .
+        '.' .
+        $extension;
+
+    /*
+     * Read uploaded file.
+     */
+
+    $fileContents = file_get_contents($file['tmp_name']);
+
+    if ($fileContents === false) {
+        throw new RuntimeException(
+            'Unable to read uploaded file.'
+        );
+    }
+
+    /*
+     * Upload to Vercel Blob.
+     */
+
+    $url = 'https://blob.vercel-storage.com/' . $filename;
+
+    $ch = curl_init($url);
+
+    curl_setopt_array($ch, [
+        CURLOPT_CUSTOMREQUEST  => 'PUT',
+        CURLOPT_POSTFIELDS     => $fileContents,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER     => [
+            'Authorization: Bearer ' . $token,
+            'Content-Type: ' . ($file['type'] ?? 'application/octet-stream'),
+            'x-content-type: ' . ($file['type'] ?? 'application/octet-stream'),
+        ],
+        CURLOPT_TIMEOUT        => 60,
+        CURLOPT_CONNECTTIMEOUT => 15,
+    ]);
+
+    $response = curl_exec($ch);
+
+    if ($response === false) {
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        throw new RuntimeException(
+            'Vercel Blob connection failed: ' . $curlError
+        );
+    }
+
+    $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+    curl_close($ch);
+
+    if ($httpCode < 200 || $httpCode >= 300) {
+        throw new RuntimeException(
+            'Vercel Blob upload failed. HTTP status: ' . $httpCode
+        );
+    }
+
+    /*
+     * Vercel Blob normally returns JSON containing the blob URL.
+     */
+
+    $json = json_decode($response, true);
+
+    if (
+        is_array($json) &&
+        !empty($json['url'])
+    ) {
+        return (string) $json['url'];
+    }
+
+    /*
+     * Fallback URL.
+     */
+
+    return $url;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| DELETE VERCEL BLOB
+|--------------------------------------------------------------------------
+|
+| Used if DB insert fails after successful upload.
+|
+*/
+
+function deleteVercelBlob(string $url): void
+{
+    $token = getenv('BLOB_READ_WRITE_TOKEN') ?: '';
+
+    if ($token === '' || $url === '') {
+        return;
+    }
+
+    $ch = curl_init($url);
+
+    curl_setopt_array($ch, [
+        CURLOPT_CUSTOMREQUEST  => 'DELETE',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER     => [
+            'Authorization: Bearer ' . $token,
+        ],
+        CURLOPT_TIMEOUT        => 30,
+        CURLOPT_CONNECTTIMEOUT => 10,
+    ]);
+
+    curl_exec($ch);
+
+    curl_close($ch);
+}
 
 
 /*
@@ -100,8 +252,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $laptop_available =
         $_POST['laptop_available'] ?? '';
 
-    $message =
-        trim($_POST['message'] ?? '');
+    $message = trim($_POST['message'] ?? '');
 
 
     /*
@@ -111,54 +262,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     */
 
     if ($full_name === '') {
-        $errors[] =
-            'Please enter your full name.';
+        $errors[] = 'Please enter your full name.';
     }
 
     if ($email === '') {
 
-        $errors[] =
-            'Please enter your email address.';
+        $errors[] = 'Please enter your email address.';
 
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 
-        $errors[] =
-            'Please enter a valid email address.';
+        $errors[] = 'Please enter a valid email address.';
     }
 
     if ($phone === '') {
-        $errors[] =
-            'Please enter your phone number.';
+        $errors[] = 'Please enter your phone number.';
     }
 
     if ($education === '') {
-        $errors[] =
-            'Please enter your educational qualification.';
+        $errors[] = 'Please enter your educational qualification.';
     }
 
     if ($address === '') {
-        $errors[] =
-            'Please enter your address.';
+        $errors[] = 'Please enter your address.';
     }
 
-    if (
-        !in_array(
-            $computer_available,
-            ['yes', 'no'],
-            true
-        )
-    ) {
+    if (!in_array(
+        $computer_available,
+        ['yes', 'no'],
+        true
+    )) {
         $errors[] =
             'Please select whether you have access to a computer.';
     }
 
-    if (
-        !in_array(
-            $laptop_available,
-            ['yes', 'no'],
-            true
-        )
-    ) {
+    if (!in_array(
+        $laptop_available,
+        ['yes', 'no'],
+        true
+    )) {
         $errors[] =
             'Please select whether you have access to a laptop.';
     }
@@ -178,8 +319,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $photo['error'] === UPLOAD_ERR_NO_FILE
     ) {
 
-        $errors[] =
-            'Please upload your photo.';
+        $errors[] = 'Please upload your photo.';
 
     } elseif ($photo['error'] !== UPLOAD_ERR_OK) {
 
@@ -189,84 +329,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
 
         /*
-        | Maximum 500KB
-        */
+         * Maximum 500 KB
+         */
 
-        if ($photo['size'] > 500 * 1024) {
+        if ((int) $photo['size'] > 500 * 1024) {
 
             $errors[] =
                 'Photo size must not exceed 500KB.';
         }
 
-
         /*
-        | Check extension
-        */
+         * Detect MIME type securely.
+         */
 
-        $photoExtension = strtolower(
-            pathinfo(
-                $photo['name'],
-                PATHINFO_EXTENSION
-            )
-        );
-
-        $allowedPhotoExtensions = [
-            'jpg',
-            'jpeg',
-            'png',
-            'webp'
-        ];
+        $photoMime = '';
 
         if (
-            !in_array(
-                $photoExtension,
-                $allowedPhotoExtensions,
-                true
-            )
-        ) {
-
-            $errors[] =
-                'Photo must be JPG, PNG or WEBP.';
-        }
-
-
-        /*
-        | Check MIME
-        */
-
-        if (
-            !empty($photo['tmp_name']) &&
+            isset($photo['tmp_name']) &&
             is_uploaded_file($photo['tmp_name'])
         ) {
 
-            $photoMime = '';
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
 
-            if (function_exists('mime_content_type')) {
+            $photoMime =
+                $finfo->file($photo['tmp_name']) ?: '';
+        }
 
-                $photoMime =
-                    mime_content_type(
-                        $photo['tmp_name']
-                    );
-            }
+        $allowedPhotoTypes = [
+            'image/jpeg' => 'jpg',
+            'image/png'  => 'png',
+            'image/webp' => 'webp'
+        ];
 
-            $allowedPhotoMimes = [
-                'image/jpeg',
-                'image/png',
-                'image/webp'
-            ];
+        if (!isset($allowedPhotoTypes[$photoMime])) {
 
-            if (
-                $photoMime !== '' &&
-                !in_array(
-                    $photoMime,
-                    $allowedPhotoMimes,
-                    true
-                )
-            ) {
-
-                $errors[] =
-                    'Photo must be JPG, PNG or WEBP.';
-            }
+            $errors[] =
+                'Photo must be JPG, PNG or WEBP.';
         }
     }
 
@@ -285,8 +383,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $cv['error'] === UPLOAD_ERR_NO_FILE
     ) {
 
-        $errors[] =
-            'Please upload your CV.';
+        $errors[] = 'Please upload your CV.';
 
     } elseif ($cv['error'] !== UPLOAD_ERR_OK) {
 
@@ -296,23 +393,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
 
         /*
-        | Maximum 5MB
-        */
+         * Maximum 5 MB
+         */
 
-        if ($cv['size'] > 5 * 1024 * 1024) {
+        if ((int) $cv['size'] > 5 * 1024 * 1024) {
 
             $errors[] =
                 'CV size must not exceed 5MB.';
         }
 
-
         /*
-        | Check extension
-        */
+         * Extension
+         */
 
         $cvExtension = strtolower(
             pathinfo(
-                $cv['name'],
+                $cv['name'] ?? '',
                 PATHINFO_EXTENSION
             )
         );
@@ -323,13 +419,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'docx'
         ];
 
-        if (
-            !in_array(
-                $cvExtension,
-                $allowedCvExtensions,
-                true
-            )
-        ) {
+        if (!in_array(
+            $cvExtension,
+            $allowedCvExtensions,
+            true
+        )) {
 
             $errors[] =
                 'CV must be PDF, DOC or DOCX.';
@@ -339,120 +433,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     /*
     |--------------------------------------------------------------------------
-    | SAVE APPLICATION
+    | UPLOAD + DATABASE
     |--------------------------------------------------------------------------
     */
 
+    $photoUrl = null;
+    $cvUrl = null;
+
     if (empty($errors)) {
 
-        $photoBlobUrl = null;
-        $cvBlobUrl = null;
-
         try {
-
-            /*
-            |--------------------------------------------------------------------------
-            | CHECK VERCEL BLOB TOKEN
-            |--------------------------------------------------------------------------
-            */
-
-            if (!getenv('BLOB_READ_WRITE_TOKEN')) {
-
-                throw new Exception(
-                    'BLOB_READ_WRITE_TOKEN is not configured.'
-                );
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | START DATABASE TRANSACTION
-            |--------------------------------------------------------------------------
-            */
-
-            $pdo->beginTransaction();
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | PHOTO EXTENSION
-            |--------------------------------------------------------------------------
-            */
-
-            $photoExtension = strtolower(
-                pathinfo(
-                    $photo['name'],
-                    PATHINFO_EXTENSION
-                )
-            );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | PHOTO MIME TYPE
-            |--------------------------------------------------------------------------
-            */
-
-            $photoMime = '';
-
-            if (
-                !empty($photo['tmp_name']) &&
-                function_exists('mime_content_type')
-            ) {
-
-                $photoMime =
-                    mime_content_type(
-                        $photo['tmp_name']
-                    );
-            }
-
-            if ($photoMime === '') {
-
-                $photoMime = match ($photoExtension) {
-
-                    'jpg',
-                    'jpeg' =>
-                        'image/jpeg',
-
-                    'png' =>
-                        'image/png',
-
-                    'webp' =>
-                        'image/webp',
-
-                    default =>
-                        'application/octet-stream'
-                };
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | UNIQUE PHOTO FILE NAME
-            |--------------------------------------------------------------------------
-            */
-
-            $photoFileName =
-                'photo_' .
-                $job_id .
-                '_' .
-                bin2hex(
-                    random_bytes(12)
-                ) .
-                '.' .
-                $photoExtension;
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | PHOTO BLOB PATH
-            |--------------------------------------------------------------------------
-            */
-
-            $photoBlobPath =
-                'career/photos/' .
-                $photoFileName;
-
 
             /*
             |--------------------------------------------------------------------------
@@ -460,93 +450,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             |--------------------------------------------------------------------------
             */
 
-            $photoBlobUrl =
-                uploadToVercelBlob(
-                    $photo['tmp_name'],
-                    $photoBlobPath,
-                    $photoMime
-                );
+            $photoMime = '';
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | CV EXTENSION
-            |--------------------------------------------------------------------------
-            */
-
-            $cvExtension = strtolower(
-                pathinfo(
-                    $cv['name'],
-                    PATHINFO_EXTENSION
-                )
-            );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | CV MIME TYPE
-            |--------------------------------------------------------------------------
-            */
-
-            $cvMime = '';
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
 
             if (
-                !empty($cv['tmp_name']) &&
-                function_exists('mime_content_type')
+                isset($photo['tmp_name']) &&
+                is_uploaded_file($photo['tmp_name'])
             ) {
-
-                $cvMime =
-                    mime_content_type(
-                        $cv['tmp_name']
-                    );
+                $photoMime =
+                    $finfo->file($photo['tmp_name']) ?: '';
             }
 
+            $photoExtension =
+                $allowedPhotoTypes[$photoMime] ?? 'jpg';
 
-            if ($cvMime === '') {
-
-                $cvMime = match ($cvExtension) {
-
-                    'pdf' =>
-                        'application/pdf',
-
-                    'doc' =>
-                        'application/msword',
-
-                    'docx' =>
-                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-
-                    default =>
-                        'application/octet-stream'
-                };
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | UNIQUE CV FILE NAME
-            |--------------------------------------------------------------------------
-            */
-
-            $cvFileName =
-                'cv_' .
-                $job_id .
-                '_' .
-                bin2hex(
-                    random_bytes(12)
-                ) .
-                '.' .
-                $cvExtension;
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | CV BLOB PATH
-            |--------------------------------------------------------------------------
-            */
-
-            $cvBlobPath =
-                'career/cvs/' .
-                $cvFileName;
+            $photoUrl = uploadToVercelBlob(
+                $photo,
+                'career/photos',
+                $photoExtension
+            );
 
 
             /*
@@ -555,17 +478,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             |--------------------------------------------------------------------------
             */
 
-            $cvBlobUrl =
-                uploadToVercelBlob(
-                    $cv['tmp_name'],
-                    $cvBlobPath,
-                    $cvMime
-                );
+            $cvExtension = strtolower(
+                pathinfo(
+                    $cv['name'] ?? '',
+                    PATHINFO_EXTENSION
+                )
+            );
+
+            $cvUrl = uploadToVercelBlob(
+                $cv,
+                'career/cvs',
+                $cvExtension
+            );
 
 
             /*
             |--------------------------------------------------------------------------
-            | INSERT APPLICATION
+            | INSERT APPLICATION INTO TIDB CLOUD
             |--------------------------------------------------------------------------
             */
 
@@ -602,9 +531,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 )
             ");
 
-
             $insert->execute([
-
                 ':job_id' =>
                     $job_id,
 
@@ -618,7 +545,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $phone,
 
                 ':photo_file' =>
-                    $photoBlobUrl,
+                    $photoUrl,
 
                 ':education' =>
                     $education,
@@ -639,30 +566,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $message,
 
                 ':cv_file' =>
-                    $cvBlobUrl
-
+                    $cvUrl
             ]);
 
 
             /*
             |--------------------------------------------------------------------------
-            | COMMIT
-            |--------------------------------------------------------------------------
-            */
-
-            $pdo->commit();
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | SUCCESS REDIRECT
+            | SUCCESS
             |--------------------------------------------------------------------------
             */
 
             header(
-                "Location: apply.php?job=" .
+                'Location: apply.php?job=' .
                 $job_id .
-                "&success=1"
+                '&success=1'
             );
 
             exit;
@@ -672,12 +589,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             /*
             |--------------------------------------------------------------------------
-            | ROLLBACK DATABASE
+            | CLEANUP BLOB FILES
             |--------------------------------------------------------------------------
             */
 
-            if ($pdo->inTransaction()) {
-                $pdo->rollBack();
+            if ($photoUrl) {
+                deleteVercelBlob($photoUrl);
+            }
+
+            if ($cvUrl) {
+                deleteVercelBlob($cvUrl);
             }
 
 
@@ -688,7 +609,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             */
 
             error_log(
-                'Career application submission failed: ' .
+                'Career application error: ' .
                 $e->getMessage()
             );
 
@@ -787,10 +708,7 @@ include __DIR__ . '/includes/header.php';
 
             <div class="career-apply-layout">
 
-
-                <!-- =================================================
-                     JOB SUMMARY
-                ================================================== -->
+                <!-- JOB SUMMARY -->
 
                 <aside class="career-apply-job-card">
 
@@ -804,17 +722,13 @@ include __DIR__ . '/includes/header.php';
 
                     <h2>
                         <?php
-                        echo escape(
-                            $job['title']
-                        );
+                        echo escape($job['title']);
                         ?>
                     </h2>
 
                     <p>
                         <?php
-                        echo escape(
-                            $job['description']
-                        );
+                        echo escape($job['description']);
                         ?>
                     </p>
 
@@ -828,9 +742,7 @@ include __DIR__ . '/includes/header.php';
 
                             <strong>
                                 <?php
-                                echo escape(
-                                    $job['job_type']
-                                );
+                                echo escape($job['job_type']);
                                 ?>
                             </strong>
 
@@ -844,9 +756,7 @@ include __DIR__ . '/includes/header.php';
 
                             <strong>
                                 <?php
-                                echo escape(
-                                    $job['location']
-                                );
+                                echo escape($job['location']);
                                 ?>
                             </strong>
 
@@ -857,9 +767,7 @@ include __DIR__ . '/includes/header.php';
                 </aside>
 
 
-                <!-- =================================================
-                     APPLICATION FORM
-                ================================================== -->
+                <!-- FORM -->
 
                 <div class="career-application-card">
 
@@ -880,10 +788,6 @@ include __DIR__ . '/includes/header.php';
 
                     </div>
 
-
-                    <!-- =================================================
-                         ERRORS
-                    ================================================== -->
 
                     <?php if (!empty($errors)): ?>
 
@@ -912,10 +816,6 @@ include __DIR__ . '/includes/header.php';
                     <?php endif; ?>
 
 
-                    <!-- =================================================
-                         FORM
-                    ================================================== -->
-
                     <form
                         action="apply.php?job=<?php echo (int) $job_id; ?>"
                         method="POST"
@@ -923,41 +823,30 @@ include __DIR__ . '/includes/header.php';
                         class="career-application-form"
                     >
 
-
-                        <!-- =================================================
-                             PERSONAL INFORMATION
-                        ================================================== -->
+                        <!-- PERSONAL INFORMATION -->
 
                         <div class="form-section-title">
-
-                            <span>
-                                01
-                            </span>
-
+                            <span>01</span>
                             Personal Information
-
                         </div>
 
 
                         <div class="form-grid">
 
-
-                            <!-- FULL NAME -->
-
                             <div class="form-group">
 
                                 <label for="full_name">
-
                                     Full Name
                                     <span>*</span>
-
                                 </label>
 
                                 <input
                                     type="text"
                                     id="full_name"
                                     name="full_name"
-                                    value="<?php echo escape($full_name); ?>"
+                                    value="<?php
+                                    echo escape($full_name);
+                                    ?>"
                                     placeholder="Enter your full name"
                                     maxlength="150"
                                     required
@@ -966,22 +855,20 @@ include __DIR__ . '/includes/header.php';
                             </div>
 
 
-                            <!-- EMAIL -->
-
                             <div class="form-group">
 
                                 <label for="email">
-
                                     Email Address
                                     <span>*</span>
-
                                 </label>
 
                                 <input
                                     type="email"
                                     id="email"
                                     name="email"
-                                    value="<?php echo escape($email); ?>"
+                                    value="<?php
+                                    echo escape($email);
+                                    ?>"
                                     placeholder="you@example.com"
                                     maxlength="190"
                                     required
@@ -990,22 +877,20 @@ include __DIR__ . '/includes/header.php';
                             </div>
 
 
-                            <!-- PHONE -->
-
                             <div class="form-group">
 
                                 <label for="phone">
-
                                     Phone Number
                                     <span>*</span>
-
                                 </label>
 
                                 <input
                                     type="tel"
                                     id="phone"
                                     name="phone"
-                                    value="<?php echo escape($phone); ?>"
+                                    value="<?php
+                                    echo escape($phone);
+                                    ?>"
                                     placeholder="+880 1XXXXXXXXX"
                                     maxlength="30"
                                     required
@@ -1014,22 +899,20 @@ include __DIR__ . '/includes/header.php';
                             </div>
 
 
-                            <!-- EDUCATION -->
-
                             <div class="form-group">
 
                                 <label for="education">
-
                                     Education
                                     <span>*</span>
-
                                 </label>
 
                                 <input
                                     type="text"
                                     id="education"
                                     name="education"
-                                    value="<?php echo escape($education); ?>"
+                                    value="<?php
+                                    echo escape($education);
+                                    ?>"
                                     placeholder="e.g. B.Sc. in Computer Science"
                                     maxlength="255"
                                     required
@@ -1040,17 +923,13 @@ include __DIR__ . '/includes/header.php';
                         </div>
 
 
-                        <!-- =================================================
-                             PHOTO
-                        ================================================== -->
+                        <!-- PHOTO -->
 
                         <div class="form-group">
 
                             <label for="photo">
-
                                 Profile Photo
                                 <span>*</span>
-
                             </label>
 
                             <input
@@ -1068,16 +947,12 @@ include __DIR__ . '/includes/header.php';
                         </div>
 
 
-                        <!-- =================================================
-                             EXPERIENCE
-                        ================================================== -->
+                        <!-- EXPERIENCE -->
 
                         <div class="form-group">
 
                             <label for="experience">
-
                                 Work Experience
-
                             </label>
 
                             <textarea
@@ -1086,22 +961,20 @@ include __DIR__ . '/includes/header.php';
                                 rows="4"
                                 maxlength="3000"
                                 placeholder="Describe your previous work experience..."
-                            ><?php echo escape($experience); ?></textarea>
+                            ><?php
+                            echo escape($experience);
+                            ?></textarea>
 
                         </div>
 
 
-                        <!-- =================================================
-                             ADDRESS
-                        ================================================== -->
+                        <!-- ADDRESS -->
 
                         <div class="form-group">
 
                             <label for="address">
-
                                 Address
                                 <span>*</span>
-
                             </label>
 
                             <textarea
@@ -1111,42 +984,31 @@ include __DIR__ . '/includes/header.php';
                                 maxlength="1000"
                                 placeholder="Enter your current address"
                                 required
-                            ><?php echo escape($address); ?></textarea>
+                            ><?php
+                            echo escape($address);
+                            ?></textarea>
 
                         </div>
 
 
-                        <!-- =================================================
-                             EQUIPMENT
-                        ================================================== -->
+                        <!-- EQUIPMENT -->
 
                         <div class="form-section-title">
-
-                            <span>
-                                02
-                            </span>
-
+                            <span>02</span>
                             Equipment Availability
-
                         </div>
 
-
-                        <!-- COMPUTER -->
 
                         <div class="equipment-question">
 
                             <label>
-
                                 Do you have access to a working computer?
                                 <span>*</span>
-
                             </label>
 
                             <div class="application-radio-group">
 
-                                <label
-                                    class="application-radio-option"
-                                >
+                                <label class="application-radio-option">
 
                                     <input
                                         type="radio"
@@ -1166,9 +1028,7 @@ include __DIR__ . '/includes/header.php';
                                 </label>
 
 
-                                <label
-                                    class="application-radio-option"
-                                >
+                                <label class="application-radio-option">
 
                                     <input
                                         type="radio"
@@ -1192,22 +1052,16 @@ include __DIR__ . '/includes/header.php';
                         </div>
 
 
-                        <!-- LAPTOP -->
-
                         <div class="equipment-question">
 
                             <label>
-
                                 Do you have access to a laptop?
                                 <span>*</span>
-
                             </label>
 
                             <div class="application-radio-group">
 
-                                <label
-                                    class="application-radio-option"
-                                >
+                                <label class="application-radio-option">
 
                                     <input
                                         type="radio"
@@ -1227,9 +1081,7 @@ include __DIR__ . '/includes/header.php';
                                 </label>
 
 
-                                <label
-                                    class="application-radio-option"
-                                >
+                                <label class="application-radio-option">
 
                                     <input
                                         type="radio"
@@ -1253,27 +1105,18 @@ include __DIR__ . '/includes/header.php';
                         </div>
 
 
-                        <!-- =================================================
-                             ADDITIONAL INFORMATION
-                        ================================================== -->
+                        <!-- MESSAGE -->
 
                         <div class="form-section-title">
-
-                            <span>
-                                03
-                            </span>
-
+                            <span>03</span>
                             Additional Information
-
                         </div>
 
 
                         <div class="form-group">
 
                             <label for="message">
-
                                 Cover Message
-
                             </label>
 
                             <textarea
@@ -1282,22 +1125,20 @@ include __DIR__ . '/includes/header.php';
                                 rows="6"
                                 maxlength="5000"
                                 placeholder="Tell us why you are interested in this position..."
-                            ><?php echo escape($message); ?></textarea>
+                            ><?php
+                            echo escape($message);
+                            ?></textarea>
 
                         </div>
 
 
-                        <!-- =================================================
-                             CV
-                        ================================================== -->
+                        <!-- CV -->
 
                         <div class="form-group">
 
                             <label for="cv">
-
                                 Resume / CV
                                 <span>*</span>
-
                             </label>
 
                             <input
@@ -1315,9 +1156,7 @@ include __DIR__ . '/includes/header.php';
                         </div>
 
 
-                        <!-- =================================================
-                             SUBMIT
-                        ================================================== -->
+                        <!-- SUBMIT -->
 
                         <div class="application-submit">
 
@@ -1325,13 +1164,8 @@ include __DIR__ . '/includes/header.php';
                                 type="submit"
                                 class="btn btn-primary"
                             >
-
                                 Submit Application
-
-                                <span>
-                                    →
-                                </span>
-
+                                <span>→</span>
                             </button>
 
                             <p>
