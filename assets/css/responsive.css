@@ -1,0 +1,1729 @@
+/* =========================================
+   FOOTER RESPONSIVE
+========================================= */
+
+@media (max-width: 900px) {
+
+    .footer-grid {
+
+        grid-template-columns:
+            1fr 1fr;
+
+        gap: 45px;
+
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .site-footer {
+
+        padding: 60px 0 20px;
+
+    }
+
+
+    .footer-grid {
+
+        grid-template-columns: 1fr;
+
+        gap: 35px;
+
+        padding-bottom: 40px;
+
+    }
+
+
+    .footer-company > p {
+
+        max-width: 100%;
+
+    }
+
+
+    .footer-bottom {
+
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        gap: 15px;
+
+    }
+
+
+    .footer-bottom-links {
+
+        flex-wrap: wrap;
+
+        gap: 15px;
+
+    }
+
+}
+
+/* =========================================
+   HOME RESPONSIVE
+========================================= */
+
+@media (max-width: 900px) {
+
+    .hero-container {
+
+        grid-template-columns: 1fr;
+
+        text-align: center;
+
+        gap: 30px;
+
+    }
+
+
+    .hero-content {
+
+        margin: 0 auto;
+
+    }
+
+
+    .hero-description {
+
+        margin-left: auto;
+
+        margin-right: auto;
+
+    }
+
+
+    .hero-buttons {
+
+        justify-content: center;
+
+    }
+
+
+    .hero-trust {
+
+        justify-content: center;
+
+    }
+
+
+    .hero-visual {
+
+        min-height: 450px;
+
+        transform: scale(0.85);
+
+    }
+
+
+    .growth-grid {
+
+        grid-template-columns: 1fr;
+
+        gap: 45px;
+
+    }
+
+}
+
+
+@media (max-width: 768px) {
+
+    .hero-section {
+
+        min-height: auto;
+
+    }
+
+
+    .hero-container {
+
+        padding-top: 145px;
+
+        padding-bottom: 100px;
+
+    }
+
+
+    .hero-title {
+
+        font-size: clamp(
+            40px,
+            10vw,
+            58px
+        );
+
+        letter-spacing: -1.5px;
+
+    }
+
+
+    .hero-description {
+
+        font-size: 15px;
+
+    }
+
+
+    .hero-visual {
+
+        min-height: 390px;
+
+        transform: scale(0.75);
+
+        margin-top: -30px;
+
+    }
+
+
+    .growth-section {
+
+        padding: 80px 0;
+
+    }
+
+
+    .growth-heading h2 {
+
+        font-size: 38px;
+
+    }
+
+
+    .growth-stats {
+
+        grid-template-columns:
+            repeat(2, 1fr);
+
+        margin-top: 60px;
+
+    }
+
+
+    .stat-item:nth-child(2) {
+
+        border-right: none;
+
+    }
+
+
+    .stat-item:nth-child(1),
+    .stat-item:nth-child(2) {
+
+        border-bottom:
+            1px solid
+            rgba(11,23,48,0.09);
+
+    }
+
+}
+
+
+@media (max-width: 480px) {
+
+    .hero-container {
+
+        padding-top: 125px;
+
+    }
+
+
+    .hero-title {
+
+        font-size: 39px;
+
+    }
+
+
+    .hero-buttons {
+
+        flex-direction: column;
+
+        width: 100%;
+
+    }
+
+
+    .primary-btn,
+    .secondary-btn {
+
+        width: 100%;
+
+    }
+
+
+    .hero-trust {
+
+        flex-direction: column;
+
+        gap: 10px;
+
+    }
+
+
+    .hero-visual {
+
+        min-height: 320px;
+
+        transform: scale(0.60);
+
+        margin-top: -50px;
+
+        margin-bottom: -40px;
+
+    }
+
+
+    .scroll-indicator {
+
+        display: none;
+
+    }
+
+
+    .growth-heading h2 {
+
+        font-size: 34px;
+
+    }
+
+
+    .growth-stats {
+
+        grid-template-columns: 1fr;
+
+    }
+
+
+    .stat-item {
+
+        border-right: none;
+
+        border-bottom:
+            1px solid
+            rgba(11,23,48,0.09);
+
+    }
+
+
+    .stat-item:last-child {
+
+        border-bottom: none;
+
+    }
+
+}
+
+/* =========================
+   SERVICES RESPONSIVE
+========================= */
+
+@media (max-width: 1000px) {
+
+    .services-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+
+@media (max-width: 650px) {
+
+    .services-section {
+        padding: 80px 0;
+    }
+
+    .section-heading {
+        margin-bottom: 40px;
+    }
+
+    .services-grid {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .service-card {
+        min-height: auto;
+        padding: 30px 25px;
+    }
+
+    .services-cta {
+        flex-direction: column;
+        text-align: center;
+        gap: 18px;
+        padding: 25px 20px;
+    }
+
+    .services-cta .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+}
+
+/* =========================
+   GROWTH PROCESS RESPONSIVE
+========================= */
+
+@media (max-width: 1000px) {
+
+    .process-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .process-grid::before {
+        display: none;
+    }
+
+}
+
+
+@media (max-width: 650px) {
+
+    .growth-process-section {
+        padding: 80px 0;
+    }
+
+    .process-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .process-card {
+        padding: 25px 22px;
+    }
+
+    .process-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+
+        padding: 28px 24px;
+    }
+
+    .process-bottom .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+}
+
+/* =========================
+   PORTFOLIO RESPONSIVE
+========================= */
+
+@media (max-width: 800px) {
+
+    .portfolio-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .portfolio-large,
+    .portfolio-wide {
+        grid-column: span 1;
+    }
+
+    .portfolio-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .portfolio-section {
+        padding: 80px 0;
+    }
+
+    .portfolio-visual {
+        height: 210px;
+    }
+
+    .project-window {
+        width: 82%;
+    }
+
+    .marketing-dashboard {
+        width: 78%;
+    }
+
+    .data-panel {
+        width: 80%;
+    }
+
+    .portfolio-info {
+        padding: 24px 22px 27px;
+    }
+
+    .portfolio-bottom {
+        padding: 27px 22px;
+    }
+
+    .portfolio-bottom h3 {
+        font-size: 19px;
+    }
+
+    .portfolio-bottom .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+}
+
+/* =========================
+   CAREER CTA RESPONSIVE
+========================= */
+
+@media (max-width: 900px) {
+
+    .career-cta-box {
+        grid-template-columns: 1fr;
+
+        padding: 50px 40px;
+
+        gap: 40px;
+    }
+
+    .career-visual {
+        width: 290px;
+        height: 290px;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .career-cta-section {
+        padding: 80px 0;
+    }
+
+    .career-cta-box {
+        padding: 35px 24px;
+
+        border-radius: 22px;
+    }
+
+    .career-cta-points {
+        flex-direction: column;
+        gap: 9px;
+    }
+
+    .career-visual {
+        width: 250px;
+        height: 250px;
+    }
+
+    .career-orbit.orbit-one {
+        width: 210px;
+        height: 210px;
+    }
+
+    .career-orbit.orbit-two {
+        width: 155px;
+        height: 155px;
+    }
+
+    .career-core {
+        width: 85px;
+        height: 85px;
+    }
+
+    .career-core span {
+        font-size: 23px;
+    }
+
+    .card-top {
+        right: -5px;
+    }
+
+    .card-bottom {
+        left: -5px;
+    }
+
+
+    /* FAQ */
+
+    .faq-section {
+        padding: 80px 0;
+    }
+
+    .faq-item summary {
+        padding: 20px;
+
+        font-size: 14px;
+    }
+
+    .faq-answer {
+        padding: 0 20px 20px;
+    }
+
+    .faq-bottom {
+        flex-direction: column;
+
+        text-align: center;
+    }
+
+}
+
+/* =========================
+   FINAL CONTACT RESPONSIVE
+========================= */
+
+@media (max-width: 900px) {
+
+    .final-contact-box {
+        grid-template-columns: 1fr;
+
+        gap: 40px;
+
+        padding: 50px 40px;
+    }
+
+    .final-contact-info {
+        max-width: 600px;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .final-contact-section {
+        padding: 80px 0;
+    }
+
+    .final-contact-box {
+        padding: 35px 24px;
+
+        border-radius: 22px;
+    }
+
+    .final-contact-buttons {
+        flex-direction: column;
+    }
+
+    .final-contact-buttons .btn {
+        width: 100%;
+    }
+
+    .final-contact-info {
+        gap: 12px;
+    }
+
+    .contact-info-item {
+        padding: 14px;
+    }
+
+}
+
+/* =========================================
+   ABOUT PAGE RESPONSIVE
+========================================= */
+
+@media (max-width: 992px) {
+
+    .about-hero-container {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    .about-hero-content {
+        max-width: 800px;
+        text-align: center;
+        margin: 0 auto;
+    }
+
+    .about-hero-content p {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .about-hero-buttons {
+        justify-content: center;
+    }
+
+    .about-hero-visual {
+        min-height: 430px;
+    }
+
+    .company-intro-grid {
+        grid-template-columns: 1fr;
+        gap: 50px;
+    }
+
+    .company-intro-content {
+        max-width: 800px;
+    }
+}
+
+
+@media (max-width: 600px) {
+
+    .about-hero-section {
+        min-height: auto;
+        padding: 125px 0 75px;
+    }
+
+    .about-hero-content h1 {
+        font-size: 40px;
+        letter-spacing: -1px;
+    }
+
+    .about-hero-content p {
+        font-size: 15px;
+    }
+
+    .about-hero-buttons {
+        flex-direction: column;
+    }
+
+    .about-hero-buttons .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .about-hero-visual {
+        min-height: 390px;
+    }
+
+    .about-visual-card {
+        width: 270px;
+        min-height: 320px;
+    }
+
+    .visual-core {
+        width: 125px;
+        height: 125px;
+        margin-top: 35px;
+    }
+
+    .visual-core span {
+        font-size: 32px;
+    }
+
+    .about-float-one {
+        left: 0;
+        top: 45px;
+    }
+
+    .about-float-two {
+        right: -5px;
+        top: 150px;
+    }
+
+    .about-float-three {
+        left: 10px;
+        bottom: 30px;
+    }
+
+    .company-intro-section {
+        padding: 80px 0;
+    }
+
+    .company-intro-content h2 {
+        font-size: 34px;
+    }
+
+    .intro-highlight-card {
+        padding: 28px;
+    }
+
+    .intro-mini-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =========================================
+   ABOUT - MISSION / VALUES RESPONSIVE
+========================================= */
+
+@media (max-width: 992px) {
+
+    .mission-vision-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .values-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .mission-vision-section,
+    .values-section {
+        padding: 80px 0;
+    }
+
+    .section-heading.centered {
+        margin-bottom: 40px;
+    }
+
+    .purpose-card {
+        min-height: auto;
+        padding: 30px;
+    }
+
+    .purpose-number {
+        font-size: 45px;
+    }
+
+    .values-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .value-card {
+        min-height: auto;
+        padding: 28px;
+    }
+
+}
+
+/* =========================================
+   ABOUT PART 3 RESPONSIVE
+========================================= */
+
+@media (max-width: 992px) {
+
+    .why-about-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .about-approach-grid {
+        grid-template-columns: 1fr;
+        gap: 50px;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .why-about-section,
+    .about-approach-section {
+        padding: 80px 0;
+    }
+
+    .why-about-card {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        padding: 25px;
+    }
+
+    .why-about-icon {
+        width: 52px;
+        height: 52px;
+    }
+
+    .approach-step {
+        grid-template-columns: 52px 1fr;
+        gap: 15px;
+        padding: 18px;
+    }
+
+    .approach-step-number {
+        width: 52px;
+        height: 52px;
+    }
+
+    .about-cta-box {
+        padding: 45px 25px;
+    }
+
+    .about-cta-buttons {
+        flex-direction: column;
+    }
+
+    .about-cta-buttons .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+}
+
+/* =========================================
+   SERVICES PAGE RESPONSIVE
+========================================= */
+
+@media (max-width: 992px) {
+
+    .services-hero-container {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    .services-hero-content {
+        max-width: 800px;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .services-hero-content p {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .services-hero-buttons {
+        justify-content: center;
+    }
+
+    .services-hero-visual {
+        min-height: 420px;
+    }
+
+    .services-page-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .services-hero-section {
+        min-height: auto;
+        padding: 125px 0 75px;
+    }
+
+    .services-hero-content h1 {
+        font-size: 40px;
+        letter-spacing: -1px;
+    }
+
+    .services-hero-content p {
+        font-size: 15px;
+    }
+
+    .services-hero-buttons {
+        flex-direction: column;
+    }
+
+    .services-hero-buttons .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .services-hero-visual {
+        min-height: 370px;
+    }
+
+    .orbit-large {
+        width: 290px;
+        height: 290px;
+    }
+
+    .orbit-small {
+        width: 205px;
+        height: 205px;
+    }
+
+    .service-hero-core {
+        width: 140px;
+        height: 140px;
+    }
+
+    .service-hero-core span {
+        font-size: 36px;
+    }
+
+    .service-float-top {
+        top: 25px;
+        left: 0;
+    }
+
+    .service-float-right {
+        right: 0;
+        top: 145px;
+    }
+
+    .service-float-bottom {
+        left: 15px;
+        bottom: 20px;
+    }
+
+    .services-intro-section {
+        padding: 80px 0 30px;
+    }
+
+    .services-list-section {
+        padding: 45px 0 80px;
+    }
+
+    .services-page-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .service-page-card {
+        min-height: auto;
+        padding: 27px;
+    }
+
+}
+
+/* =========================================
+   DETAILED SERVICES RESPONSIVE
+========================================= */
+
+@media (max-width: 992px) {
+
+    .service-detail-row {
+        grid-template-columns: 1fr;
+        gap: 45px;
+        padding: 70px 0;
+    }
+
+    .service-detail-row.reverse .service-detail-content,
+    .service-detail-row.reverse .service-detail-visual {
+        order: initial;
+    }
+
+    .service-detail-content {
+        max-width: 750px;
+    }
+
+    .service-detail-visual {
+        min-height: 350px;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .detailed-services-section {
+        padding: 80px 0;
+    }
+
+    .service-detail-row {
+        padding: 55px 0;
+    }
+
+    .service-detail-content h3 {
+        font-size: 30px;
+    }
+
+    .service-detail-content > p {
+        font-size: 14px;
+    }
+
+    .service-detail-visual {
+        min-height: 300px;
+    }
+
+    .detail-visual-window,
+    .marketing-visual,
+    .data-visual,
+    .creative-visual,
+    .architecture-visual {
+        width: 100%;
+        height: 260px;
+    }
+
+    .social-visual {
+        width: 290px;
+        height: 290px;
+    }
+
+    .social-circle {
+        width: 110px;
+        height: 110px;
+        font-size: 34px;
+    }
+
+    .data-bars {
+        gap: 10px;
+    }
+
+    .data-bars span {
+        width: 32px;
+    }
+
+    .data-line {
+        width: 220px;
+        left: 40px;
+    }
+
+    .building-one {
+        left: 35px;
+    }
+
+    .building-two {
+        left: 105px;
+    }
+
+    .building-three {
+        right: 30px;
+    }
+
+}
+
+/* =========================================
+   SERVICES PART 3 RESPONSIVE
+========================================= */
+
+@media (max-width: 1100px) {
+
+    .process-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .why-services-grid {
+        gap: 45px;
+    }
+
+    .services-cta-box {
+        padding: 55px;
+    }
+
+}
+
+
+@media (max-width: 900px) {
+
+    .why-services-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .why-services-content {
+        position: static;
+        max-width: 700px;
+    }
+
+    .services-cta-box {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .services-cta-content p {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .services-cta-content .cta-buttons {
+        justify-content: center;
+    }
+
+    .services-cta-visual {
+        min-height: 280px;
+    }
+
+}
+
+
+@media (max-width: 700px) {
+
+    .process-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .why-services-list {
+        grid-template-columns: 1fr;
+    }
+
+    .services-cta-box {
+        padding: 40px 25px;
+        border-radius: 22px;
+    }
+
+    .services-cta-visual {
+        min-height: 240px;
+    }
+
+    .cta-orbit.orbit-one {
+        width: 130px;
+        height: 130px;
+    }
+
+    .cta-orbit.orbit-two {
+        width: 185px;
+        height: 185px;
+    }
+
+    .cta-orbit.orbit-three {
+        width: 240px;
+        height: 240px;
+    }
+
+    .cta-core {
+        width: 90px;
+        height: 90px;
+    }
+
+    .cta-core span {
+        font-size: 23px;
+    }
+
+    .cta-floating-card.card-one {
+        right: 0;
+    }
+
+    .cta-floating-card.card-two {
+        left: 0;
+    }
+
+}
+
+
+@media (max-width: 480px) {
+
+    .process-card {
+        padding: 28px 22px;
+    }
+
+    .why-service-item {
+        padding: 20px;
+    }
+
+    .services-cta-box {
+        padding: 35px 20px;
+    }
+
+    .services-cta-content .cta-buttons {
+        flex-direction: column;
+    }
+
+    .services-cta-content .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+}
+
+/* =========================================
+   CAREER RESPONSIVE
+========================================= */
+
+@media (max-width: 1100px) {
+
+    .career-hero-grid {
+        gap: 35px;
+    }
+
+    .career-intro-grid {
+        gap: 45px;
+    }
+
+    .career-benefits-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+
+@media (max-width: 900px) {
+
+    .career-hero-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+        padding-top: 50px;
+        padding-bottom: 50px;
+    }
+
+    .career-hero-content p {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .career-hero-content .hero-buttons {
+        justify-content: center;
+    }
+
+    .career-hero-visual {
+        min-height: 400px;
+    }
+
+    .career-intro-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .career-intro-highlight {
+        max-width: 650px;
+    }
+
+}
+
+
+@media (max-width: 700px) {
+
+    .career-benefits-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .career-jobs-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .career-hero-visual {
+        min-height: 330px;
+    }
+
+    .career-orbit.orbit-one {
+        width: 140px;
+        height: 140px;
+    }
+
+    .career-orbit.orbit-two {
+        width: 220px;
+        height: 220px;
+    }
+
+    .career-orbit.orbit-three {
+        width: 300px;
+        height: 300px;
+    }
+
+    .career-core {
+        width: 100px;
+        height: 100px;
+    }
+
+    .career-card-one {
+        top: 20px;
+        right: 0;
+    }
+
+    .career-card-two {
+        bottom: 45px;
+        left: 0;
+    }
+
+    .career-card-three {
+        bottom: 0;
+        right: 20px;
+    }
+
+    .career-intro-highlight {
+        padding: 30px 25px;
+    }
+
+}
+
+
+@media (max-width: 480px) {
+
+    .career-mini-stats {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .career-benefit-card {
+        padding: 28px 23px;
+    }
+
+    .job-card {
+        padding: 26px 22px;
+    }
+
+    .career-floating-card {
+        padding: 10px 14px;
+    }
+
+}
+
+/* ==========================================
+   CAREER PART 3 RESPONSIVE
+========================================== */
+
+@media (max-width: 1100px) {
+
+    .work-info-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .requirements-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .application-wrapper {
+        grid-template-columns: 1fr;
+        gap: 45px;
+    }
+
+    .application-intro {
+        position: static;
+    }
+
+    .application-intro h2 {
+        max-width: 700px;
+    }
+}
+
+
+@media (max-width: 800px) {
+
+    .job-detail-header {
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .job-detail-content {
+        grid-template-columns: 1fr;
+        gap: 25px;
+    }
+
+    .application-highlights {
+        max-width: 600px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+}
+
+
+@media (max-width: 600px) {
+
+    .work-info-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .work-info-card {
+        padding: 19px 16px;
+    }
+
+    .requirements-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .requirement-card {
+        padding: 26px 22px;
+    }
+
+    .job-detail-card {
+        padding: 24px 20px;
+        border-radius: 18px;
+    }
+
+    .job-detail-header h3 {
+        font-size: 21px;
+    }
+
+    .job-detail-content {
+        padding-top: 23px;
+    }
+
+    .application-form-wrapper {
+        padding: 22px 18px;
+        border-radius: 20px;
+    }
+
+    .application-intro h2 {
+        font-size: 30px;
+    }
+
+    .application-highlights {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .application-highlights > div {
+        padding: 15px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        padding: 13px 14px;
+    }
+}
+
+/* ==========================================
+   CONTACT PAGE RESPONSIVE
+========================================== */
+
+@media (max-width: 1100px) {
+
+    .contact-info-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .contact-service-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .contact-main-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .contact-location-container {
+        position: static;
+    }
+}
+
+
+@media (max-width: 850px) {
+
+    .contact-hero-grid {
+        grid-template-columns: 1fr;
+        min-height: auto;
+        padding: 80px 0;
+    }
+
+    .contact-hero-visual {
+        min-height: 400px;
+    }
+
+    .final-cta-box {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 40px 30px;
+    }
+}
+
+
+@media (max-width: 600px) {
+
+    .contact-info-grid,
+    .contact-service-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .contact-hero-content h1 {
+        font-size: 40px;
+    }
+
+    .contact-hero-visual {
+        min-height: 330px;
+    }
+
+    .contact-orbit.orbit-one {
+        width: 240px;
+        height: 240px;
+    }
+
+    .contact-orbit.orbit-two {
+        width: 310px;
+        height: 310px;
+    }
+
+    .contact-core {
+        width: 115px;
+        height: 115px;
+    }
+
+    .contact-core span {
+        font-size: 32px;
+    }
+
+    .card-message {
+        left: 0;
+        top: 12%;
+    }
+
+    .card-growth {
+        right: 0;
+        bottom: 12%;
+    }
+
+    .contact-form {
+        padding: 22px 18px;
+    }
+
+    .location-card {
+        padding: 30px 22px;
+    }
+
+    .final-cta-box {
+        padding: 32px 22px;
+    }
+
+    .final-cta-actions {
+        width: 100%;
+    }
+
+    .final-cta-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* =========================================================
+   CAREER APPLY — RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    .career-application-card {
+        padding: 30px !important;
+    }
+
+    .career-apply-job-card {
+        padding: 28px !important;
+    }
+
+    .application-submit-area {
+        align-items: flex-start !important;
+        flex-direction: column !important;
+    }
+
+    .application-submit-button {
+        width: 100% !important;
+    }
+}
+
+
+/* =========================================================
+   TABLET / MOBILE
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+    .career-apply-section {
+        padding:
+            50px 14px 70px !important;
+    }
+
+    .career-apply-job-card {
+        padding: 25px 21px !important;
+
+        border-radius: 17px !important;
+    }
+
+    .career-apply-job-card h2 {
+        font-size: 24px !important;
+    }
+
+    .career-application-card {
+        padding: 22px 16px !important;
+
+        border-radius: 18px !important;
+    }
+
+    .career-application-header h2 {
+        font-size: 23px !important;
+    }
+
+    .application-form-section {
+        padding: 20px 15px !important;
+    }
+
+    .application-form-grid {
+        grid-template-columns: 1fr !important;
+
+        gap: 17px !important;
+    }
+
+    .application-form-group.full-width {
+        grid-column: auto !important;
+    }
+
+    .application-radio-group {
+        grid-template-columns:
+            1fr 1fr !important;
+    }
+
+    .application-submit-area {
+        flex-direction: column !important;
+
+        align-items: stretch !important;
+    }
+
+    .application-submit-button {
+        width: 100% !important;
+    }
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 480px) {
+
+    .career-apply-section {
+        padding:
+            38px 10px 55px !important;
+    }
+
+    .career-apply-job-card {
+        padding: 21px 16px !important;
+    }
+
+    .career-apply-job-card h2 {
+        font-size: 21px !important;
+    }
+
+    .career-apply-job-card p {
+        font-size: 12px !important;
+    }
+
+    .career-apply-job-meta {
+        gap: 7px !important;
+    }
+
+    .career-apply-job-meta span {
+        padding: 7px 9px !important;
+
+        font-size: 9px !important;
+    }
+
+    .career-application-card {
+        padding: 18px 12px !important;
+    }
+
+    .career-application-header h2 {
+        font-size: 21px !important;
+    }
+
+    .career-application-header p {
+        font-size: 11px !important;
+    }
+
+    .application-form-section {
+        padding: 18px 12px !important;
+    }
+
+    .application-section-title {
+        font-size: 13px !important;
+    }
+
+    .application-form-group label {
+        font-size: 11px !important;
+    }
+
+    .application-form-group input[type="text"],
+    .application-form-group input[type="email"],
+    .application-form-group input[type="tel"],
+    .application-form-group input[type="number"],
+    .application-form-group select {
+        min-height: 49px !important;
+
+        font-size: 12px !important;
+    }
+
+    .application-form-group textarea {
+        min-height: 110px !important;
+    }
+
+    .application-radio-option {
+        min-height: 52px !important;
+
+        padding: 0 7px !important;
+    }
+
+    .application-radio-option span {
+        font-size: 10px !important;
+    }
+
+    .application-radio-option input[type="radio"] {
+        width: 15px !important;
+        height: 15px !important;
+    }
+
+    .application-submit-button {
+        min-height: 51px !important;
+
+        font-size: 12px !important;
+    }
+}
