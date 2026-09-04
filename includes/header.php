@@ -44,9 +44,9 @@ require_once __DIR__ . '/functions.php';
          MAIN WEBSITE CSS
     =========================================== -->
 
-  <link rel="stylesheet" href="/hello-biz-it/assets/css/style.css">
-<link rel="stylesheet" href="/hello-biz-it/assets/css/responsive.css">
-<link rel="stylesheet" href="/hello-biz-it/assets/css/animations.css">
+<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/responsive.css">
+<link rel="stylesheet" href="/assets/css/animations.css">
 
 </head>
 
