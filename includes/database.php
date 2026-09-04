@@ -2,64 +2,42 @@
 
 declare(strict_types=1);
 
-$host = getenv('DB_HOST') ?: 'localhost';
-$port = getenv('DB_PORT') ?: '4000';
-$dbname = getenv('DB_NAME') ?: 'hello-biz-it';
-$username = getenv('DB_USER') ?: '2fNxPpBQVeiH8nj.root';
+$host = trim(getenv('DB_HOST') ?: '');
+$port = trim(getenv('DB_PORT') ?: '4000');
+$dbname = trim(getenv('DB_NAME') ?: '');
+$username = trim(getenv('DB_USER') ?: '');
 $password = getenv('DB_PASSWORD') ?: '';
 
 try {
 
-    $dsn =
-        "mysql:host={$host};" .
-        "port={$port};" .
-        "dbname={$dbname};" .
-        "charset=utf8mb4";
-
-    $options = [
-
-        PDO::ATTR_ERRMODE =>
-            PDO::ERRMODE_EXCEPTION,
-
-        PDO::ATTR_DEFAULT_FETCH_MODE =>
-            PDO::FETCH_ASSOC,
-
-        PDO::ATTR_EMULATE_PREPARES =>
-            false,
-
-    ];
-
-
-    $caCandidates = [
-
-        getenv('DB_SSL_CA') ?: '',
-
-        '/etc/ssl/certs/ca-certificates.crt',
-
-        '/etc/ssl/cert.pem',
-
-    ];
-
-
-    foreach ($caCandidates as $caFile) {
-
-        if (
-            $caFile !== '' &&
-            is_file($caFile)
-        ) {
-
-            $options[
-                PDO::MYSQL_ATTR_SSL_CA
-            ] = $caFile;
-
-            $options[
-                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT
-            ] = true;
-
-            break;
-        }
+    if ($host === '' || $dbname === '' || $username === '') {
+        throw new RuntimeException(
+            'Database environment variables are missing.'
+        );
     }
 
+    $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset=utf8mb4";
+
+    $options = [
+        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES   => false,
+    ];
+
+    /*
+     * TiDB Cloud SSL
+     */
+
+    $caFile = getenv('DB_SSL_CA') ?: '';
+
+    if ($caFile !== '' && is_file($caFile)) {
+
+        $options[PDO::MYSQL_ATTR_SSL_CA] = $caFile;
+
+        if (defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT')) {
+            $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = true;
+        }
+    }
 
     $pdo = new PDO(
         $dsn,
@@ -68,15 +46,24 @@ try {
         $options
     );
 
-
-} catch (PDOException $e) {
+} catch (Throwable $e) {
 
     error_log(
-        'Database connection failed: ' .
+        'DATABASE ERROR: ' .
         $e->getMessage()
     );
 
+    /*
+     * TEMPORARY DEBUG
+     * Remove after database works.
+     */
+
     die(
-        'Database connection failed. Please try again later.'
+        'Database connection failed: ' .
+        htmlspecialchars(
+            $e->getMessage(),
+            ENT_QUOTES,
+            'UTF-8'
+        )
     );
 }
