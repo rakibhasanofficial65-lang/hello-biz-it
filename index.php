@@ -8,7 +8,167 @@ include __DIR__ . '/includes/header.php';
 
 ?>
 
+<style>
+/* =========================================
+   INDEX PAGE — MOBILE HERO FIX
+========================================= */
 
+@media (max-width: 900px) {
+
+    .hero-section {
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .hero-section .container.hero-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 auto !important;
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+
+        justify-items: center !important;
+        align-items: center !important;
+
+        box-sizing: border-box !important;
+    }
+
+    .hero-section .hero-content {
+        width: 100% !important;
+        max-width: 700px !important;
+
+        margin: 0 auto !important;
+
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+
+        text-align: center !important;
+    }
+
+    .hero-section .hero-badge {
+        margin-left: auto !important;
+        margin-right: auto !important;
+        text-align: center !important;
+    }
+
+    .hero-section .hero-title {
+        width: 100% !important;
+        max-width: 700px !important;
+
+        margin-left: auto !important;
+        margin-right: auto !important;
+
+        text-align: center !important;
+
+        transform: none !important;
+        left: auto !important;
+        right: auto !important;
+    }
+
+    .hero-section .hero-description {
+        width: 100% !important;
+        max-width: 650px !important;
+
+        margin-left: auto !important;
+        margin-right: auto !important;
+
+        text-align: center !important;
+
+        transform: none !important;
+        left: auto !important;
+        right: auto !important;
+    }
+
+    .hero-section .hero-buttons {
+        width: auto !important;
+
+        margin-left: auto !important;
+        margin-right: auto !important;
+
+        justify-content: center !important;
+        align-items: center !important;
+    }
+
+    .hero-section .hero-trust {
+        width: 100% !important;
+
+        margin-left: auto !important;
+        margin-right: auto !important;
+
+        justify-content: center !important;
+        align-items: center !important;
+
+        text-align: center !important;
+    }
+
+    .hero-section .hero-visual {
+        margin-left: auto !important;
+        margin-right: auto !important;
+
+        left: auto !important;
+        right: auto !important;
+
+        transform-origin: center center !important;
+    }
+}
+
+
+/* =========================================
+   SMALL PHONE
+========================================= */
+
+@media (max-width: 480px) {
+
+    .hero-section .container.hero-container {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
+    .hero-section .hero-title {
+        width: 100% !important;
+        max-width: 355px !important;
+
+        font-size: clamp(35px, 10.5vw, 48px) !important;
+        line-height: 1.08 !important;
+
+        text-align: center !important;
+    }
+
+    .hero-section .hero-description {
+        width: 100% !important;
+        max-width: 330px !important;
+
+        font-size: 14px !important;
+        line-height: 1.7 !important;
+
+        text-align: center !important;
+    }
+
+    .hero-section .hero-buttons {
+        width: 100% !important;
+        max-width: 330px !important;
+
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    .hero-section .hero-buttons a {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        justify-content: center !important;
+    }
+
+    .hero-section .hero-trust {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+}
+</style>
 <!-- =========================================
      HERO SECTION
 ========================================= -->
