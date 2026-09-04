@@ -2556,7 +2556,395 @@ p {
     }
 
 }
+/* =========================================================
+   SERVICES — WHY CHOOSE US
+   DEFINITIVE MOBILE FIX
+========================================================= */
 
+/* -------------------------------
+   DESKTOP
+-------------------------------- */
+
+.services-why-section {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.why-services-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 80px;
+
+    width: 100%;
+    max-width: 100%;
+
+    box-sizing: border-box;
+}
+
+.why-services-content {
+    width: 100%;
+    max-width: 600px;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.why-services-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+
+    box-sizing: border-box;
+}
+
+.why-service-item {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+
+    box-sizing: border-box;
+
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+}
+
+.why-service-item > div:last-child {
+    min-width: 0;
+    flex: 1;
+}
+
+.why-service-item h3,
+.why-service-item p {
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-break: normal;
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 1000px) {
+
+    .why-services-grid {
+        grid-template-columns: 1fr !important;
+        gap: 45px !important;
+    }
+
+    .why-services-content {
+        width: 100% !important;
+        max-width: 750px !important;
+    }
+
+    .why-services-list {
+        width: 100% !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 700px) {
+
+    .services-why-section {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        padding: 75px 0 !important;
+
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+
+    .services-why-section .container {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        margin: 0 auto !important;
+
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+
+        box-sizing: border-box !important;
+    }
+
+
+    /* MAIN SECTION = ONE COLUMN */
+
+    .why-services-grid {
+        display: grid !important;
+
+        grid-template-columns: minmax(0, 1fr) !important;
+
+        gap: 45px !important;
+
+        width: 100% !important;
+        max-width: 100% !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        box-sizing: border-box !important;
+    }
+
+
+    /* LEFT CONTENT */
+
+    .why-services-content {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        box-sizing: border-box !important;
+
+        text-align: left !important;
+    }
+
+    .why-services-content .section-label {
+        display: block !important;
+
+        width: 100% !important;
+        max-width: 100% !important;
+
+        margin-bottom: 28px !important;
+
+        text-align: left !important;
+    }
+
+    .why-services-content h2 {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        margin: 0 0 25px !important;
+
+        font-size: clamp(34px, 9vw, 48px) !important;
+        line-height: 1.12 !important;
+        letter-spacing: -1px !important;
+
+        text-align: left !important;
+
+        overflow-wrap: normal !important;
+        word-break: normal !important;
+    }
+
+    .why-services-content h2 span {
+        display: inline !important;
+    }
+
+    .why-services-content p {
+        width: 100% !important;
+        max-width: 620px !important;
+
+        margin: 0 0 22px !important;
+
+        font-size: 15px !important;
+        line-height: 1.8 !important;
+
+        text-align: left !important;
+
+        overflow-wrap: break-word !important;
+        word-break: normal !important;
+    }
+
+    .why-services-content .btn {
+        margin-top: 8px !important;
+        width: auto !important;
+    }
+
+
+    /* RIGHT BENEFIT CARDS = ONE COLUMN */
+
+    .why-services-list {
+        display: grid !important;
+
+        grid-template-columns: minmax(0, 1fr) !important;
+
+        gap: 15px !important;
+
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        box-sizing: border-box !important;
+    }
+
+    .why-service-item {
+        display: flex !important;
+
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+
+        margin: 0 !important;
+
+        padding: 24px 20px !important;
+
+        box-sizing: border-box !important;
+
+        gap: 16px !important;
+
+        align-items: flex-start !important;
+
+        overflow: hidden !important;
+    }
+
+    .why-service-icon {
+        flex: 0 0 42px !important;
+
+        width: 42px !important;
+        height: 42px !important;
+
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+
+        box-sizing: border-box !important;
+    }
+
+    .why-service-item > div:last-child {
+        flex: 1 1 auto !important;
+
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    .why-service-item h3 {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        margin: 0 0 9px !important;
+
+        font-size: 17px !important;
+        line-height: 1.35 !important;
+
+        overflow-wrap: break-word !important;
+        word-break: normal !important;
+    }
+
+    .why-service-item p {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        margin: 0 !important;
+
+        font-size: 13px !important;
+        line-height: 1.7 !important;
+
+        overflow-wrap: break-word !important;
+        word-break: normal !important;
+    }
+
+}
+
+
+/* =========================================================
+   SMALL PHONE
+========================================================= */
+
+@media (max-width: 480px) {
+
+    .services-why-section {
+        padding: 65px 0 !important;
+    }
+
+    .services-why-section .container {
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+    }
+
+    .why-services-grid {
+        gap: 38px !important;
+    }
+
+    .why-services-content h2 {
+        font-size: 35px !important;
+        line-height: 1.12 !important;
+    }
+
+    .why-services-content p {
+        font-size: 14px !important;
+        line-height: 1.75 !important;
+    }
+
+    .why-services-list {
+        grid-template-columns: 1fr !important;
+        gap: 13px !important;
+    }
+
+    .why-service-item {
+        padding: 22px 18px !important;
+        gap: 14px !important;
+        border-radius: 18px !important;
+    }
+
+    .why-service-icon {
+        flex: 0 0 40px !important;
+
+        width: 40px !important;
+        height: 40px !important;
+    }
+
+    .why-service-item h3 {
+        font-size: 16px !important;
+    }
+
+    .why-service-item p {
+        font-size: 12.5px !important;
+        line-height: 1.7 !important;
+    }
+
+}
+
+
+/* =========================================================
+   EXTRA SMALL PHONE
+========================================================= */
+
+@media (max-width: 380px) {
+
+    .services-why-section .container {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
+    .why-services-content h2 {
+        font-size: 32px !important;
+    }
+
+    .why-service-item {
+        padding: 20px 16px !important;
+    }
+
+    .why-service-icon {
+        flex-basis: 38px !important;
+
+        width: 38px !important;
+        height: 38px !important;
+    }
+
+}
 /* =========================================================
    END
 ========================================================= */
