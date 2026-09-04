@@ -2239,7 +2239,323 @@ p {
         height: 40px;
     }
 }
+/* =========================================================
+   SERVICES PAGE — DEFINITIVE RESPONSIVE FIX
+   ========================================================= */
 
+/* Desktop */
+.services-page-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.service-page-card {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 1000px) {
+
+    .services-page-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 20px !important;
+        width: 100% !important;
+    }
+
+    .service-page-card {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 650px) {
+
+    .services-list-section {
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+
+    .services-list-section .container {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        box-sizing: border-box !important;
+    }
+
+    .services-page-grid {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 18px !important;
+
+        width: 100% !important;
+        max-width: 100% !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        box-sizing: border-box !important;
+    }
+
+    .service-page-card {
+        display: block !important;
+
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+
+        margin: 0 !important;
+
+        padding: 28px 22px !important;
+
+        box-sizing: border-box !important;
+
+        overflow: hidden !important;
+    }
+
+    .service-page-top {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .service-page-card h3 {
+        width: 100%;
+        max-width: 100%;
+
+        font-size: 22px;
+        line-height: 1.25;
+
+        overflow-wrap: break-word;
+        word-break: normal;
+    }
+
+    .service-page-card p {
+        width: 100%;
+        max-width: 100%;
+
+        font-size: 14px;
+        line-height: 1.75;
+
+        overflow-wrap: break-word;
+        word-break: normal;
+    }
+
+    .service-page-card ul {
+        width: 100%;
+        max-width: 100%;
+
+        padding-left: 18px;
+        box-sizing: border-box;
+    }
+
+    .service-page-card li {
+        font-size: 13px;
+        line-height: 1.6;
+        overflow-wrap: break-word;
+    }
+
+    .service-page-link {
+        display: flex;
+
+        width: 100%;
+        max-width: 100%;
+
+        box-sizing: border-box;
+
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+
+        overflow-wrap: break-word;
+    }
+
+}
+
+
+/* =========================================
+   SMALL PHONE
+========================================= */
+
+@media (max-width: 480px) {
+
+    .services-list-section .container {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
+    .services-page-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 15px !important;
+    }
+
+    .service-page-card {
+        width: 100% !important;
+        min-width: 0 !important;
+
+        padding: 24px 18px !important;
+
+        border-radius: 18px !important;
+    }
+
+    .service-page-number {
+        font-size: 11px;
+    }
+
+    .service-page-icon {
+        flex-shrink: 0;
+    }
+
+    .service-page-card h3 {
+        font-size: 20px !important;
+        line-height: 1.25 !important;
+    }
+
+    .service-page-card p {
+        font-size: 13px !important;
+        line-height: 1.7 !important;
+    }
+
+    .service-page-card li {
+        font-size: 12px !important;
+    }
+
+    .service-page-link {
+        font-size: 12px !important;
+    }
+
+}
+
+
+/* =========================================
+   GLOBAL SERVICES OVERFLOW PROTECTION
+========================================= */
+
+@media (max-width: 900px) {
+
+    html,
+    body {
+        max-width: 100%;
+        overflow-x: hidden !important;
+    }
+
+    .services-hero-section,
+    .services-intro-section,
+    .services-list-section,
+    .detailed-services-section,
+    .services-process-section,
+    .services-why-section,
+    .services-final-cta {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .services-page-grid,
+    .service-page-card {
+        transform: none;
+    }
+
+}
+
+
+/* =========================================
+   SERVICES DETAIL MOBILE FIX
+========================================= */
+
+@media (max-width: 700px) {
+
+    .service-detail-row,
+    .service-detail-row.reverse {
+        grid-template-columns: 1fr !important;
+        gap: 35px !important;
+    }
+
+    .service-detail-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .service-detail-visual {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+
+}
+
+
+/* =========================================
+   SERVICES HERO MOBILE FIX
+========================================= */
+
+@media (max-width: 700px) {
+
+    .services-hero-container {
+        grid-template-columns: 1fr !important;
+        width: 100% !important;
+        max-width: 100% !important;
+
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+
+        box-sizing: border-box !important;
+    }
+
+    .services-hero-content {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        text-align: center !important;
+        margin: 0 auto !important;
+    }
+
+    .services-hero-content h1 {
+        font-size: clamp(38px, 10vw, 52px) !important;
+        line-height: 1.08 !important;
+    }
+
+    .services-hero-content p {
+        max-width: 340px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+
+    .services-hero-buttons {
+        justify-content: center !important;
+        flex-wrap: wrap;
+    }
+
+    .services-hero-visual {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: visible;
+    }
+
+}
 
 /* =========================================================
    END
