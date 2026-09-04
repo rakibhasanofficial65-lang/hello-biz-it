@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 $host = getenv('DB_HOST') ?: 'localhost';
-$port = getenv('DB_PORT') ?: '3306';
+$port = getenv('DB_PORT') ?: '4000';
 $dbname = getenv('DB_NAME') ?: 'hello-biz-it';
 $username = getenv('DB_USER') ?: 'root';
 $password = getenv('DB_PASSWORD') ?: '';
