@@ -1,10 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 require_once __DIR__ . '/includes/config.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/database.php';
+require_once __DIR__ . '/includes/blob.php';
 
 $page_title = "Apply Now | " . SITE_NAME;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -27,7 +31,13 @@ if ($job_id <= 0) {
 */
 
 $stmt = $pdo->prepare("
-    SELECT id, title, slug, job_type, location, description
+    SELECT
+        id,
+        title,
+        slug,
+        job_type,
+        location,
+        description
     FROM jobs
     WHERE id = ?
       AND status = 'active'
@@ -65,25 +75,6 @@ $message = '';
 
 /*
 |--------------------------------------------------------------------------
-| UPLOAD DIRECTORIES
-|--------------------------------------------------------------------------
-*/
-
-$uploadBase = __DIR__ . '/uploads/career/';
-$photoDir   = $uploadBase . 'photos/';
-$cvDir      = $uploadBase . 'cvs/';
-
-if (!is_dir($photoDir)) {
-    mkdir($photoDir, 0755, true);
-}
-
-if (!is_dir($cvDir)) {
-    mkdir($cvDir, 0755, true);
-}
-
-
-/*
-|--------------------------------------------------------------------------
 | FORM SUBMISSION
 |--------------------------------------------------------------------------
 */
@@ -102,45 +93,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $education = trim($_POST['education'] ?? '');
     $experience = trim($_POST['experience'] ?? '');
     $address = trim($_POST['address'] ?? '');
-    $computer_available = $_POST['computer_available'] ?? '';
-    $laptop_available = $_POST['laptop_available'] ?? '';
-    $message = trim($_POST['message'] ?? '');
+
+    $computer_available =
+        $_POST['computer_available'] ?? '';
+
+    $laptop_available =
+        $_POST['laptop_available'] ?? '';
+
+    $message =
+        trim($_POST['message'] ?? '');
 
 
     /*
     |--------------------------------------------------------------------------
-    | VALIDATION
+    | BASIC VALIDATION
     |--------------------------------------------------------------------------
     */
 
     if ($full_name === '') {
-        $errors[] = 'Please enter your full name.';
+        $errors[] =
+            'Please enter your full name.';
     }
 
     if ($email === '') {
-        $errors[] = 'Please enter your email address.';
+
+        $errors[] =
+            'Please enter your email address.';
+
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = 'Please enter a valid email address.';
+
+        $errors[] =
+            'Please enter a valid email address.';
     }
 
     if ($phone === '') {
-        $errors[] = 'Please enter your phone number.';
+        $errors[] =
+            'Please enter your phone number.';
     }
 
     if ($education === '') {
-        $errors[] = 'Please enter your educational qualification.';
+        $errors[] =
+            'Please enter your educational qualification.';
     }
 
     if ($address === '') {
-        $errors[] = 'Please enter your address.';
+        $errors[] =
+            'Please enter your address.';
     }
 
-    if (!in_array($computer_available, ['yes', 'no'], true)) {
-        $errors[] = 'Please select whether you have access to a computer.';
+    if (
+        !in_array(
+            $computer_available,
+            ['yes', 'no'],
+            true
+        )
+    ) {
+        $errors[] =
+            'Please select whether you have access to a computer.';
     }
 
-    if (!in_array($laptop_available, ['yes', 'no'], true)) {
-        $errors[] = 'Please select whether you have access to a laptop.';
+    if (
+        !in_array(
+            $laptop_available,
+            ['yes', 'no'],
+            true
+        )
+    ) {
+        $errors[] =
+            'Please select whether you have access to a laptop.';
     }
 
 
@@ -150,51 +170,102 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     |--------------------------------------------------------------------------
     */
 
-    $photoFileName = null;
+    $photo = $_FILES['photo'] ?? null;
 
     if (
-        !isset($_FILES['photo']) ||
-        $_FILES['photo']['error'] === UPLOAD_ERR_NO_FILE
+        !$photo ||
+        !isset($photo['error']) ||
+        $photo['error'] === UPLOAD_ERR_NO_FILE
     ) {
 
-        $errors[] = 'Please upload your photo.';
+        $errors[] =
+            'Please upload your photo.';
+
+    } elseif ($photo['error'] !== UPLOAD_ERR_OK) {
+
+        $errors[] =
+            'There was a problem uploading your photo.';
 
     } else {
 
-        $photo = $_FILES['photo'];
+        /*
+        | Maximum 500KB
+        */
 
-        if ($photo['error'] !== UPLOAD_ERR_OK) {
+        if ($photo['size'] > 500 * 1024) {
 
-            $errors[] = 'There was a problem uploading your photo.';
+            $errors[] =
+                'Photo size must not exceed 500KB.';
+        }
 
-        } else {
 
-            /*
-            | Maximum 500 KB
-            */
+        /*
+        | Check extension
+        */
 
-            if ($photo['size'] > 500 * 1024) {
-                $errors[] = 'Photo size must not exceed 500KB.';
+        $photoExtension = strtolower(
+            pathinfo(
+                $photo['name'],
+                PATHINFO_EXTENSION
+            )
+        );
+
+        $allowedPhotoExtensions = [
+            'jpg',
+            'jpeg',
+            'png',
+            'webp'
+        ];
+
+        if (
+            !in_array(
+                $photoExtension,
+                $allowedPhotoExtensions,
+                true
+            )
+        ) {
+
+            $errors[] =
+                'Photo must be JPG, PNG or WEBP.';
+        }
+
+
+        /*
+        | Check MIME
+        */
+
+        if (
+            !empty($photo['tmp_name']) &&
+            is_uploaded_file($photo['tmp_name'])
+        ) {
+
+            $photoMime = '';
+
+            if (function_exists('mime_content_type')) {
+
+                $photoMime =
+                    mime_content_type(
+                        $photo['tmp_name']
+                    );
             }
 
-            /*
-            | Allowed photo types
-            */
-
-            $allowedPhotoTypes = [
+            $allowedPhotoMimes = [
                 'image/jpeg',
                 'image/png',
                 'image/webp'
             ];
 
-            $photoMime = '';
+            if (
+                $photoMime !== '' &&
+                !in_array(
+                    $photoMime,
+                    $allowedPhotoMimes,
+                    true
+                )
+            ) {
 
-            if (function_exists('mime_content_type')) {
-                $photoMime = mime_content_type($photo['tmp_name']);
-            }
-
-            if (!in_array($photoMime, $allowedPhotoTypes, true)) {
-                $errors[] = 'Photo must be JPG, PNG or WEBP.';
+                $errors[] =
+                    'Photo must be JPG, PNG or WEBP.';
             }
         }
     }
@@ -206,50 +277,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     |--------------------------------------------------------------------------
     */
 
-    $cvFileName = null;
+    $cv = $_FILES['cv'] ?? null;
 
     if (
-        !isset($_FILES['cv']) ||
-        $_FILES['cv']['error'] === UPLOAD_ERR_NO_FILE
+        !$cv ||
+        !isset($cv['error']) ||
+        $cv['error'] === UPLOAD_ERR_NO_FILE
     ) {
 
-        $errors[] = 'Please upload your CV.';
+        $errors[] =
+            'Please upload your CV.';
+
+    } elseif ($cv['error'] !== UPLOAD_ERR_OK) {
+
+        $errors[] =
+            'There was a problem uploading your CV.';
 
     } else {
 
-        $cv = $_FILES['cv'];
+        /*
+        | Maximum 5MB
+        */
 
-        if ($cv['error'] !== UPLOAD_ERR_OK) {
+        if ($cv['size'] > 5 * 1024 * 1024) {
 
-            $errors[] = 'There was a problem uploading your CV.';
+            $errors[] =
+                'CV size must not exceed 5MB.';
+        }
 
-        } else {
 
-            /*
-            | Maximum CV size: 5MB
-            */
+        /*
+        | Check extension
+        */
 
-            if ($cv['size'] > 5 * 1024 * 1024) {
-                $errors[] = 'CV size must not exceed 5MB.';
-            }
+        $cvExtension = strtolower(
+            pathinfo(
+                $cv['name'],
+                PATHINFO_EXTENSION
+            )
+        );
 
-            /*
-            | Allowed extensions
-            */
+        $allowedCvExtensions = [
+            'pdf',
+            'doc',
+            'docx'
+        ];
 
-            $cvExtension = strtolower(
-                pathinfo($cv['name'], PATHINFO_EXTENSION)
-            );
+        if (
+            !in_array(
+                $cvExtension,
+                $allowedCvExtensions,
+                true
+            )
+        ) {
 
-            $allowedCvExtensions = [
-                'pdf',
-                'doc',
-                'docx'
-            ];
-
-            if (!in_array($cvExtension, $allowedCvExtensions, true)) {
-                $errors[] = 'CV must be PDF, DOC or DOCX.';
-            }
+            $errors[] =
+                'CV must be PDF, DOC or DOCX.';
         }
     }
 
@@ -262,82 +345,222 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($errors)) {
 
+        $photoBlobUrl = null;
+        $cvBlobUrl = null;
+
         try {
+
+            /*
+            |--------------------------------------------------------------------------
+            | CHECK VERCEL BLOB TOKEN
+            |--------------------------------------------------------------------------
+            */
+
+            if (!getenv('BLOB_READ_WRITE_TOKEN')) {
+
+                throw new Exception(
+                    'BLOB_READ_WRITE_TOKEN is not configured.'
+                );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | START DATABASE TRANSACTION
+            |--------------------------------------------------------------------------
+            */
 
             $pdo->beginTransaction();
 
 
             /*
             |--------------------------------------------------------------------------
-            | PHOTO FILE NAME
+            | PHOTO EXTENSION
             |--------------------------------------------------------------------------
             */
 
             $photoExtension = strtolower(
-                pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION)
+                pathinfo(
+                    $photo['name'],
+                    PATHINFO_EXTENSION
+                )
             );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | PHOTO MIME TYPE
+            |--------------------------------------------------------------------------
+            */
+
+            $photoMime = '';
+
+            if (
+                !empty($photo['tmp_name']) &&
+                function_exists('mime_content_type')
+            ) {
+
+                $photoMime =
+                    mime_content_type(
+                        $photo['tmp_name']
+                    );
+            }
+
+            if ($photoMime === '') {
+
+                $photoMime = match ($photoExtension) {
+
+                    'jpg',
+                    'jpeg' =>
+                        'image/jpeg',
+
+                    'png' =>
+                        'image/png',
+
+                    'webp' =>
+                        'image/webp',
+
+                    default =>
+                        'application/octet-stream'
+                };
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | UNIQUE PHOTO FILE NAME
+            |--------------------------------------------------------------------------
+            */
 
             $photoFileName =
                 'photo_' .
-                $job_id . '_' .
-                bin2hex(random_bytes(12)) .
+                $job_id .
+                '_' .
+                bin2hex(
+                    random_bytes(12)
+                ) .
                 '.' .
                 $photoExtension;
 
 
             /*
             |--------------------------------------------------------------------------
-            | CV FILE NAME
+            | PHOTO BLOB PATH
+            |--------------------------------------------------------------------------
+            */
+
+            $photoBlobPath =
+                'career/photos/' .
+                $photoFileName;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | UPLOAD PHOTO TO VERCEL BLOB
+            |--------------------------------------------------------------------------
+            */
+
+            $photoBlobUrl =
+                uploadToVercelBlob(
+                    $photo['tmp_name'],
+                    $photoBlobPath,
+                    $photoMime
+                );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | CV EXTENSION
             |--------------------------------------------------------------------------
             */
 
             $cvExtension = strtolower(
-                pathinfo($_FILES['cv']['name'], PATHINFO_EXTENSION)
+                pathinfo(
+                    $cv['name'],
+                    PATHINFO_EXTENSION
+                )
             );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | CV MIME TYPE
+            |--------------------------------------------------------------------------
+            */
+
+            $cvMime = '';
+
+            if (
+                !empty($cv['tmp_name']) &&
+                function_exists('mime_content_type')
+            ) {
+
+                $cvMime =
+                    mime_content_type(
+                        $cv['tmp_name']
+                    );
+            }
+
+
+            if ($cvMime === '') {
+
+                $cvMime = match ($cvExtension) {
+
+                    'pdf' =>
+                        'application/pdf',
+
+                    'doc' =>
+                        'application/msword',
+
+                    'docx' =>
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+
+                    default =>
+                        'application/octet-stream'
+                };
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | UNIQUE CV FILE NAME
+            |--------------------------------------------------------------------------
+            */
 
             $cvFileName =
                 'cv_' .
-                $job_id . '_' .
-                bin2hex(random_bytes(12)) .
+                $job_id .
+                '_' .
+                bin2hex(
+                    random_bytes(12)
+                ) .
                 '.' .
                 $cvExtension;
 
 
             /*
             |--------------------------------------------------------------------------
-            | MOVE PHOTO
+            | CV BLOB PATH
             |--------------------------------------------------------------------------
             */
 
-            $photoTarget = $photoDir . $photoFileName;
-
-            if (!move_uploaded_file(
-                $_FILES['photo']['tmp_name'],
-                $photoTarget
-            )) {
-                throw new Exception('Unable to save photo.');
-            }
+            $cvBlobPath =
+                'career/cvs/' .
+                $cvFileName;
 
 
             /*
             |--------------------------------------------------------------------------
-            | MOVE CV
+            | UPLOAD CV TO VERCEL BLOB
             |--------------------------------------------------------------------------
             */
 
-            $cvTarget = $cvDir . $cvFileName;
-
-            if (!move_uploaded_file(
-                $_FILES['cv']['tmp_name'],
-                $cvTarget
-            )) {
-
-                if (file_exists($photoTarget)) {
-                    unlink($photoTarget);
-                }
-
-                throw new Exception('Unable to save CV.');
-            }
+            $cvBlobUrl =
+                uploadToVercelBlob(
+                    $cv['tmp_name'],
+                    $cvBlobPath,
+                    $cvMime
+                );
 
 
             /*
@@ -361,7 +584,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     message,
                     cv_file,
                     status
-                ) VALUES (
+                )
+                VALUES (
                     :job_id,
                     :full_name,
                     :email,
@@ -378,28 +602,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 )
             ");
 
+
             $insert->execute([
-                ':job_id' => $job_id,
-                ':full_name' => $full_name,
-                ':email' => $email,
-                ':phone' => $phone,
-                ':photo_file' => 'uploads/career/photos/' . $photoFileName,
-                ':education' => $education,
-                ':experience' => $experience,
-                ':address' => $address,
-                ':computer_available' => $computer_available,
-                ':laptop_available' => $laptop_available,
-                ':message' => $message,
-                ':cv_file' => 'uploads/career/cvs/' . $cvFileName
+
+                ':job_id' =>
+                    $job_id,
+
+                ':full_name' =>
+                    $full_name,
+
+                ':email' =>
+                    $email,
+
+                ':phone' =>
+                    $phone,
+
+                ':photo_file' =>
+                    $photoBlobUrl,
+
+                ':education' =>
+                    $education,
+
+                ':experience' =>
+                    $experience,
+
+                ':address' =>
+                    $address,
+
+                ':computer_available' =>
+                    $computer_available,
+
+                ':laptop_available' =>
+                    $laptop_available,
+
+                ':message' =>
+                    $message,
+
+                ':cv_file' =>
+                    $cvBlobUrl
+
             ]);
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | COMMIT
+            |--------------------------------------------------------------------------
+            */
 
             $pdo->commit();
 
 
             /*
             |--------------------------------------------------------------------------
-            | SUCCESS
+            | SUCCESS REDIRECT
             |--------------------------------------------------------------------------
             */
 
@@ -411,31 +667,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             exit;
 
+
         } catch (Throwable $e) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | ROLLBACK DATABASE
+            |--------------------------------------------------------------------------
+            */
 
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
             }
 
+
             /*
-            | Remove uploaded files if database operation fails
+            |--------------------------------------------------------------------------
+            | LOG REAL ERROR
+            |--------------------------------------------------------------------------
             */
 
-            if (
-                !empty($photoTarget) &&
-                file_exists($photoTarget)
-            ) {
-                unlink($photoTarget);
-            }
+            error_log(
+                'Career application submission failed: ' .
+                $e->getMessage()
+            );
 
-            if (
-                !empty($cvTarget) &&
-                file_exists($cvTarget)
-            ) {
-                unlink($cvTarget);
-            }
 
-            $errors[] = 'Something went wrong while submitting your application. Please try again.';
+            /*
+            |--------------------------------------------------------------------------
+            | USER ERROR
+            |--------------------------------------------------------------------------
+            */
+
+            $errors[] =
+                'Something went wrong while submitting your application. Please try again.';
         }
     }
 }
@@ -465,7 +730,9 @@ include __DIR__ . '/includes/header.php';
 
             <h1>
                 Apply for
-                <span><?php echo escape($job['title']); ?></span>
+                <span>
+                    <?php echo escape($job['title']); ?>
+                </span>
             </h1>
 
             <p>
@@ -492,7 +759,9 @@ include __DIR__ . '/includes/header.php';
 
             <div class="application-success">
 
-                <div class="success-icon">✓</div>
+                <div class="success-icon">
+                    ✓
+                </div>
 
                 <h2>
                     Application Submitted Successfully
@@ -518,6 +787,7 @@ include __DIR__ . '/includes/header.php';
 
             <div class="career-apply-layout">
 
+
                 <!-- =================================================
                      JOB SUMMARY
                 ================================================== -->
@@ -533,27 +803,53 @@ include __DIR__ . '/includes/header.php';
                     </div>
 
                     <h2>
-                        <?php echo escape($job['title']); ?>
+                        <?php
+                        echo escape(
+                            $job['title']
+                        );
+                        ?>
                     </h2>
 
                     <p>
-                        <?php echo escape($job['description']); ?>
+                        <?php
+                        echo escape(
+                            $job['description']
+                        );
+                        ?>
                     </p>
 
                     <div class="apply-job-meta">
 
                         <div>
-                            <span>JOB TYPE</span>
+
+                            <span>
+                                JOB TYPE
+                            </span>
+
                             <strong>
-                                <?php echo escape($job['job_type']); ?>
+                                <?php
+                                echo escape(
+                                    $job['job_type']
+                                );
+                                ?>
                             </strong>
+
                         </div>
 
                         <div>
-                            <span>LOCATION</span>
+
+                            <span>
+                                LOCATION
+                            </span>
+
                             <strong>
-                                <?php echo escape($job['location']); ?>
+                                <?php
+                                echo escape(
+                                    $job['location']
+                                );
+                                ?>
                             </strong>
+
                         </div>
 
                     </div>
@@ -562,7 +858,7 @@ include __DIR__ . '/includes/header.php';
 
 
                 <!-- =================================================
-                     FORM
+                     APPLICATION FORM
                 ================================================== -->
 
                 <div class="career-application-card">
@@ -585,6 +881,10 @@ include __DIR__ . '/includes/header.php';
                     </div>
 
 
+                    <!-- =================================================
+                         ERRORS
+                    ================================================== -->
+
                     <?php if (!empty($errors)): ?>
 
                         <div class="application-errors">
@@ -598,7 +898,9 @@ include __DIR__ . '/includes/header.php';
                                 <?php foreach ($errors as $error): ?>
 
                                     <li>
-                                        <?php echo escape($error); ?>
+                                        <?php
+                                        echo escape($error);
+                                        ?>
                                     </li>
 
                                 <?php endforeach; ?>
@@ -610,6 +912,10 @@ include __DIR__ . '/includes/header.php';
                     <?php endif; ?>
 
 
+                    <!-- =================================================
+                         FORM
+                    ================================================== -->
+
                     <form
                         action="apply.php?job=<?php echo (int) $job_id; ?>"
                         method="POST"
@@ -617,21 +923,34 @@ include __DIR__ . '/includes/header.php';
                         class="career-application-form"
                     >
 
-                        <!-- PERSONAL INFORMATION -->
+
+                        <!-- =================================================
+                             PERSONAL INFORMATION
+                        ================================================== -->
 
                         <div class="form-section-title">
-                            <span>01</span>
+
+                            <span>
+                                01
+                            </span>
+
                             Personal Information
+
                         </div>
 
 
                         <div class="form-grid">
 
+
+                            <!-- FULL NAME -->
+
                             <div class="form-group">
 
                                 <label for="full_name">
+
                                     Full Name
                                     <span>*</span>
+
                                 </label>
 
                                 <input
@@ -647,11 +966,15 @@ include __DIR__ . '/includes/header.php';
                             </div>
 
 
+                            <!-- EMAIL -->
+
                             <div class="form-group">
 
                                 <label for="email">
+
                                     Email Address
                                     <span>*</span>
+
                                 </label>
 
                                 <input
@@ -667,11 +990,15 @@ include __DIR__ . '/includes/header.php';
                             </div>
 
 
+                            <!-- PHONE -->
+
                             <div class="form-group">
 
                                 <label for="phone">
+
                                     Phone Number
                                     <span>*</span>
+
                                 </label>
 
                                 <input
@@ -687,11 +1014,15 @@ include __DIR__ . '/includes/header.php';
                             </div>
 
 
+                            <!-- EDUCATION -->
+
                             <div class="form-group">
 
                                 <label for="education">
+
                                     Education
                                     <span>*</span>
+
                                 </label>
 
                                 <input
@@ -709,13 +1040,17 @@ include __DIR__ . '/includes/header.php';
                         </div>
 
 
-                        <!-- PHOTO -->
+                        <!-- =================================================
+                             PHOTO
+                        ================================================== -->
 
                         <div class="form-group">
 
                             <label for="photo">
+
                                 Profile Photo
                                 <span>*</span>
+
                             </label>
 
                             <input
@@ -733,12 +1068,16 @@ include __DIR__ . '/includes/header.php';
                         </div>
 
 
-                        <!-- EXPERIENCE -->
+                        <!-- =================================================
+                             EXPERIENCE
+                        ================================================== -->
 
                         <div class="form-group">
 
                             <label for="experience">
+
                                 Work Experience
+
                             </label>
 
                             <textarea
@@ -752,13 +1091,17 @@ include __DIR__ . '/includes/header.php';
                         </div>
 
 
-                        <!-- ADDRESS -->
+                        <!-- =================================================
+                             ADDRESS
+                        ================================================== -->
 
                         <div class="form-group">
 
                             <label for="address">
+
                                 Address
                                 <span>*</span>
+
                             </label>
 
                             <textarea
@@ -773,90 +1116,164 @@ include __DIR__ . '/includes/header.php';
                         </div>
 
 
-                        <!-- EQUIPMENT -->
+                        <!-- =================================================
+                             EQUIPMENT
+                        ================================================== -->
 
                         <div class="form-section-title">
-                            <span>02</span>
+
+                            <span>
+                                02
+                            </span>
+
                             Equipment Availability
+
                         </div>
 
 
+                        <!-- COMPUTER -->
+
                         <div class="equipment-question">
 
                             <label>
+
                                 Do you have access to a working computer?
                                 <span>*</span>
+
                             </label>
 
-                           <div class="application-radio-group">
+                            <div class="application-radio-group">
 
-    <label class="application-radio-option">
-        <input
-            type="radio"
-            name="computer_available"
-            value="yes"
-            <?php echo $computer_available === 'yes' ? 'checked' : ''; ?>
-        >
-        <span>Yes, I have a computer</span>
-    </label>
+                                <label
+                                    class="application-radio-option"
+                                >
 
-    <label class="application-radio-option">
-        <input
-            type="radio"
-            name="computer_available"
-            value="no"
-            <?php echo $computer_available === 'no' ? 'checked' : ''; ?>
-        >
-        <span>No, I don't have a computer</span>
-    </label>
+                                    <input
+                                        type="radio"
+                                        name="computer_available"
+                                        value="yes"
+                                        <?php
+                                        echo $computer_available === 'yes'
+                                            ? 'checked'
+                                            : '';
+                                        ?>
+                                    >
 
-</div>
+                                    <span>
+                                        Yes, I have a computer
+                                    </span>
 
+                                </label>
+
+
+                                <label
+                                    class="application-radio-option"
+                                >
+
+                                    <input
+                                        type="radio"
+                                        name="computer_available"
+                                        value="no"
+                                        <?php
+                                        echo $computer_available === 'no'
+                                            ? 'checked'
+                                            : '';
+                                        ?>
+                                    >
+
+                                    <span>
+                                        No, I don't have a computer
+                                    </span>
+
+                                </label>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- LAPTOP -->
 
                         <div class="equipment-question">
 
                             <label>
+
                                 Do you have access to a laptop?
                                 <span>*</span>
+
                             </label>
 
-<div class="application-radio-group">
+                            <div class="application-radio-group">
 
-    <label class="application-radio-option">
-        <input
-            type="radio"
-            name="laptop_available"
-            value="yes"
-            <?php echo $laptop_available === 'yes' ? 'checked' : ''; ?>
-        >
-        <span>Yes, I have a laptop</span>
-    </label>
+                                <label
+                                    class="application-radio-option"
+                                >
 
-    <label class="application-radio-option">
-        <input
-            type="radio"
-            name="laptop_available"
-            value="no"
-            <?php echo $laptop_available === 'no' ? 'checked' : ''; ?>
-        >
-        <span>No, I don't have a laptop</span>
-    </label>
+                                    <input
+                                        type="radio"
+                                        name="laptop_available"
+                                        value="yes"
+                                        <?php
+                                        echo $laptop_available === 'yes'
+                                            ? 'checked'
+                                            : '';
+                                        ?>
+                                    >
 
-</div>
+                                    <span>
+                                        Yes, I have a laptop
+                                    </span>
+
+                                </label>
 
 
-                        <!-- MESSAGE -->
+                                <label
+                                    class="application-radio-option"
+                                >
+
+                                    <input
+                                        type="radio"
+                                        name="laptop_available"
+                                        value="no"
+                                        <?php
+                                        echo $laptop_available === 'no'
+                                            ? 'checked'
+                                            : '';
+                                        ?>
+                                    >
+
+                                    <span>
+                                        No, I don't have a laptop
+                                    </span>
+
+                                </label>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- =================================================
+                             ADDITIONAL INFORMATION
+                        ================================================== -->
 
                         <div class="form-section-title">
-                            <span>03</span>
+
+                            <span>
+                                03
+                            </span>
+
                             Additional Information
+
                         </div>
 
 
                         <div class="form-group">
 
                             <label for="message">
+
                                 Cover Message
+
                             </label>
 
                             <textarea
@@ -870,13 +1287,17 @@ include __DIR__ . '/includes/header.php';
                         </div>
 
 
-                        <!-- CV -->
+                        <!-- =================================================
+                             CV
+                        ================================================== -->
 
                         <div class="form-group">
 
                             <label for="cv">
+
                                 Resume / CV
                                 <span>*</span>
+
                             </label>
 
                             <input
@@ -894,7 +1315,9 @@ include __DIR__ . '/includes/header.php';
                         </div>
 
 
-                        <!-- SUBMIT -->
+                        <!-- =================================================
+                             SUBMIT
+                        ================================================== -->
 
                         <div class="application-submit">
 
@@ -902,11 +1325,16 @@ include __DIR__ . '/includes/header.php';
                                 type="submit"
                                 class="btn btn-primary"
                             >
+
                                 Submit Application
-                                <span>→</span>
+
+                                <span>
+                                    →
+                                </span>
+
                             </button>
 
-                            <p> 
+                            <p>
                                 By submitting this application, you confirm
                                 that the information provided is accurate.
                             </p>
