@@ -2945,6 +2945,223 @@ p {
     }
 
 }
+
+/* =========================================
+   ABOUT — WHY BUSINESSES CHOOSE US
+   DEFINITIVE MOBILE FIX
+========================================= */
+
+@media (max-width: 900px) {
+
+    /* Main section */
+    .about-why-section,
+    .why-choose-section {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Main container */
+    .about-why-section .container,
+    .why-choose-section .container {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 auto !important;
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Heading */
+    .about-why-section .section-heading,
+    .why-choose-section .section-heading {
+        width: 100% !important;
+        max-width: 700px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        text-align: center !important;
+        box-sizing: border-box !important;
+    }
+
+    .about-why-section .section-heading h2,
+    .why-choose-section .section-heading h2 {
+        width: 100% !important;
+        max-width: 100% !important;
+        text-align: center !important;
+        overflow-wrap: normal !important;
+        word-break: normal !important;
+    }
+
+    .about-why-section .section-heading p,
+    .why-choose-section .section-heading p {
+        width: 100% !important;
+        max-width: 600px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        text-align: center !important;
+    }
+
+    /* IMPORTANT:
+       Force cards into ONE column */
+    .about-why-grid,
+    .why-choose-grid,
+    .about-why-cards,
+    .why-choose-cards {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+
+        gap: 18px !important;
+
+        margin-left: auto !important;
+        margin-right: auto !important;
+
+        box-sizing: border-box !important;
+    }
+
+    /* Individual cards */
+    .about-why-card,
+    .why-choose-card,
+    .about-benefit-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+
+        margin: 0 !important;
+
+        box-sizing: border-box !important;
+
+        overflow: hidden !important;
+    }
+
+    /* Card content */
+    .about-why-card *,
+    .why-choose-card *,
+    .about-benefit-card * {
+        min-width: 0 !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Card text */
+    .about-why-card h3,
+    .why-choose-card h3,
+    .about-benefit-card h3 {
+        overflow-wrap: break-word !important;
+        word-break: normal !important;
+    }
+
+    .about-why-card p,
+    .why-choose-card p,
+    .about-benefit-card p {
+        overflow-wrap: break-word !important;
+        word-break: normal !important;
+    }
+}
+
+
+/* =========================================
+   ABOUT WHY — TABLET
+========================================= */
+
+@media (min-width: 601px) and (max-width: 900px) {
+
+    .about-why-grid,
+    .why-choose-grid,
+    .about-why-cards,
+    .why-choose-cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .about-why-card,
+    .why-choose-card,
+    .about-benefit-card {
+        min-width: 0 !important;
+    }
+}
+
+
+/* =========================================
+   ABOUT WHY — SMALL PHONE
+========================================= */
+
+@media (max-width: 600px) {
+
+    .about-why-section,
+    .why-choose-section {
+        padding: 75px 0 !important;
+    }
+
+    .about-why-section .container,
+    .why-choose-section .container {
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+    }
+
+    .about-why-section .section-heading,
+    .why-choose-section .section-heading {
+        margin-bottom: 38px !important;
+    }
+
+    .about-why-section .section-heading h2,
+    .why-choose-section .section-heading h2 {
+        font-size: clamp(32px, 9vw, 42px) !important;
+        line-height: 1.08 !important;
+        letter-spacing: -1px !important;
+    }
+
+    .about-why-section .section-heading p,
+    .why-choose-section .section-heading p {
+        max-width: 340px !important;
+        font-size: 14px !important;
+        line-height: 1.7 !important;
+    }
+
+    .about-why-grid,
+    .why-choose-grid,
+    .about-why-cards,
+    .why-choose-cards {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+
+    .about-why-card,
+    .why-choose-card,
+    .about-benefit-card {
+        width: 100% !important;
+        min-width: 0 !important;
+        padding: 26px 22px !important;
+        border-radius: 20px !important;
+    }
+}
+
+
+/* =========================================
+   ABOUT WHY — VERY SMALL PHONE
+========================================= */
+
+@media (max-width: 400px) {
+
+    .about-why-section .container,
+    .why-choose-section .container {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
+    .about-why-section .section-heading h2,
+    .why-choose-section .section-heading h2 {
+        font-size: 32px !important;
+    }
+
+    .about-why-card,
+    .why-choose-card,
+    .about-benefit-card {
+        padding: 23px 18px !important;
+    }
+}
 /* =========================================================
    END
 ========================================================= */
