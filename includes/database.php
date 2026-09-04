@@ -5,7 +5,7 @@ declare(strict_types=1);
 $host = getenv('DB_HOST') ?: 'localhost';
 $port = getenv('DB_PORT') ?: '4000';
 $dbname = getenv('DB_NAME') ?: 'hello-biz-it';
-$username = getenv('DB_USER') ?: 'root';
+$username = getenv('DB_USER') ?: '2fNxPpBQVeiH8nj.root';
 $password = getenv('DB_PASSWORD') ?: '';
 
 try {
