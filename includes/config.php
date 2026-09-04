@@ -8,7 +8,10 @@ define('SITE_NAME', 'Hello Biz IT');
 |--------------------------------------------------------------------------
 */
 
-define('SITE_URL', 'https://hellobizit.free.je');
+define(
+    'SITE_URL',
+    getenv('SITE_URL') ?: 'https://hello-biz-it.vercel.app'
+);
 
 
 /*
