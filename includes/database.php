@@ -9,31 +9,57 @@ $username = getenv('DB_USER') ?: 'root';
 $password = getenv('DB_PASSWORD') ?: '';
 
 try {
-    $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset=utf8mb4";
+
+    $dsn =
+        "mysql:host={$host};" .
+        "port={$port};" .
+        "dbname={$dbname};" .
+        "charset=utf8mb4";
 
     $options = [
-        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES   => false,
+
+        PDO::ATTR_ERRMODE =>
+            PDO::ERRMODE_EXCEPTION,
+
+        PDO::ATTR_DEFAULT_FETCH_MODE =>
+            PDO::FETCH_ASSOC,
+
+        PDO::ATTR_EMULATE_PREPARES =>
+            false,
+
     ];
 
-    /*
-     * TiDB Cloud uses TLS for public database connections.
-     * Use the system CA bundle available in Railway.
-     */
+
     $caCandidates = [
+
         getenv('DB_SSL_CA') ?: '',
+
         '/etc/ssl/certs/ca-certificates.crt',
+
         '/etc/ssl/cert.pem',
+
     ];
+
 
     foreach ($caCandidates as $caFile) {
-        if ($caFile !== '' && is_file($caFile)) {
-            $options[PDO::MYSQL_ATTR_SSL_CA] = $caFile;
-            $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = true;
+
+        if (
+            $caFile !== '' &&
+            is_file($caFile)
+        ) {
+
+            $options[
+                PDO::MYSQL_ATTR_SSL_CA
+            ] = $caFile;
+
+            $options[
+                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT
+            ] = true;
+
             break;
         }
     }
+
 
     $pdo = new PDO(
         $dsn,
@@ -42,11 +68,15 @@ try {
         $options
     );
 
+
 } catch (PDOException $e) {
 
     error_log(
-        'Database connection failed: ' . $e->getMessage()
+        'Database connection failed: ' .
+        $e->getMessage()
     );
 
-    die('Database connection failed. Please try again later.');
+    die(
+        'Database connection failed. Please try again later.'
+    );
 }
