@@ -4,22 +4,7 @@ declare(strict_types=1);
 
 /*
 |--------------------------------------------------------------------------
-| TiDB Cloud / Vercel Database Connection
-|--------------------------------------------------------------------------
-|
-| Required environment variables:
-|
-| DB_HOST
-| DB_PORT
-| DB_NAME
-| DB_USER
-| DB_PASSWORD
-|
-| Optional:
-|
-| DB_SSL_CA
-| TIDB_CA_CERT
-|
+| Vercel + TiDB Cloud Database Connection
 |--------------------------------------------------------------------------
 */
 
@@ -32,7 +17,7 @@ $password = (string) (getenv('DB_PASSWORD') ?: '');
 
 /*
 |--------------------------------------------------------------------------
-| Validate required environment variables
+| Check required environment variables
 |--------------------------------------------------------------------------
 */
 
@@ -61,13 +46,11 @@ if ($password === '') {
 if (!empty($missing)) {
 
     error_log(
-        'Database configuration missing: ' .
+        'Database environment variables missing: ' .
         implode(', ', $missing)
     );
 
-    die(
-        'Database configuration error. Please contact the administrator.'
-    );
+    die('Database configuration error.');
 }
 
 
@@ -81,105 +64,63 @@ $options = [
     PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     PDO::ATTR_EMULATE_PREPARES   => false,
-    PDO::ATTR_STRINGIFY_FETCHES  => false,
 ];
 
 
 /*
 |--------------------------------------------------------------------------
-| TiDB Cloud TLS / CA Certificate
+| TiDB Cloud TLS
 |--------------------------------------------------------------------------
 |
 | TiDB Cloud Public Endpoint requires TLS.
 |
-| We support two methods:
-|
-| 1. DB_SSL_CA
-|    A filesystem path to a CA certificate.
-|
-| 2. TIDB_CA_CERT
-|    The actual PEM certificate stored as a Vercel
-|    environment variable.
-|
-| TIDB_CA_CERT is recommended for Vercel.
-|
+| First try a custom CA if DB_SSL_CA is provided.
+| Otherwise use the operating system CA bundle.
 |--------------------------------------------------------------------------
 */
-
 
 $caFile = '';
 
 /*
 |--------------------------------------------------------------------------
-| Method 1: DB_SSL_CA as a filesystem path
+| 1. Custom CA path
 |--------------------------------------------------------------------------
 */
 
-$dbSslCa = trim((string) (getenv('DB_SSL_CA') ?: ''));
+$customCa = trim((string) (getenv('DB_SSL_CA') ?: ''));
 
-if ($dbSslCa !== '' && is_file($dbSslCa)) {
-
-    $caFile = $dbSslCa;
+if (
+    $customCa !== '' &&
+    is_file($customCa) &&
+    is_readable($customCa)
+) {
+    $caFile = $customCa;
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| Method 2: TIDB_CA_CERT as PEM content
-|--------------------------------------------------------------------------
-|
-| Example:
-|
-| TIDB_CA_CERT=-----BEGIN CERTIFICATE-----
-| ...
-| -----END CERTIFICATE-----
-|
-| Vercel does not need the certificate to exist permanently on disk.
-| We create it inside /tmp during the request.
+| 2. Common Linux CA bundle paths
 |--------------------------------------------------------------------------
 */
 
 if ($caFile === '') {
 
-    $caContent = (string) (getenv('TIDB_CA_CERT') ?: '');
+    $caCandidates = [
+        '/etc/ssl/certs/ca-certificates.crt',
+        '/etc/ssl/cert.pem',
+        '/etc/pki/tls/certs/ca-bundle.crt',
+        '/etc/ssl/ca-bundle.pem',
+    ];
 
-    if (trim($caContent) !== '') {
+    foreach ($caCandidates as $candidate) {
 
-        /*
-         * Normalize escaped newlines.
-         */
-        $caContent = str_replace(
-            ["\\r\\n", "\\n", "\\r"],
-            PHP_EOL,
-            $caContent
-        );
-
-        /*
-         * Create a temporary CA file.
-         */
-        $caFile = '/tmp/tidb-ca-' . md5($host) . '.pem';
-
-        /*
-         * Write certificate only if it does not already exist.
-         */
-        if (!is_file($caFile)) {
-
-            $written = file_put_contents(
-                $caFile,
-                $caContent,
-                LOCK_EX
-            );
-
-            if ($written === false) {
-
-                error_log(
-                    'Unable to create TiDB CA certificate file.'
-                );
-
-                die(
-                    'Database SSL configuration error. Please contact the administrator.'
-                );
-            }
+        if (
+            is_file($candidate) &&
+            is_readable($candidate)
+        ) {
+            $caFile = $candidate;
+            break;
         }
     }
 }
@@ -187,7 +128,7 @@ if ($caFile === '') {
 
 /*
 |--------------------------------------------------------------------------
-| Enable TLS
+| Configure SSL
 |--------------------------------------------------------------------------
 */
 
@@ -196,7 +137,7 @@ if ($caFile !== '') {
     $options[PDO::MYSQL_ATTR_SSL_CA] = $caFile;
 
     /*
-     * Verify TiDB Cloud server certificate.
+     * Verify the TiDB Cloud server certificate.
      */
     if (defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT')) {
 
@@ -204,21 +145,6 @@ if ($caFile !== '') {
             PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT
         ] = true;
     }
-
-} else {
-
-    /*
-     * Do not silently continue with an unverified connection.
-     *
-     * TiDB Cloud Public Endpoint requires TLS.
-     */
-    error_log(
-        'TiDB SSL CA certificate is not configured.'
-    );
-
-    die(
-        'Database SSL configuration error. Please contact the administrator.'
-    );
 }
 
 
@@ -238,7 +164,7 @@ $dsn =
 
 /*
 |--------------------------------------------------------------------------
-| Connect to TiDB Cloud
+| Connect
 |--------------------------------------------------------------------------
 */
 
@@ -253,12 +179,8 @@ try {
 
 } catch (PDOException $e) {
 
-    /*
-     * Log the real error.
-     * Never expose credentials or connection details to visitors.
-     */
     error_log(
-        'TiDB database connection failed: ' .
+        'TiDB connection failed: ' .
         $e->getMessage()
     );
 
@@ -270,10 +192,7 @@ try {
 
 /*
 |--------------------------------------------------------------------------
-| Optional connection verification
-|--------------------------------------------------------------------------
-|
-| This confirms that PDO successfully connected.
+| Test connection
 |--------------------------------------------------------------------------
 */
 
@@ -284,7 +203,7 @@ try {
 } catch (PDOException $e) {
 
     error_log(
-        'TiDB connection verification failed: ' .
+        'TiDB connection test failed: ' .
         $e->getMessage()
     );
 
