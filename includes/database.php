@@ -2,17 +2,11 @@
 
 declare(strict_types=1);
 
-/*
-|--------------------------------------------------------------------------
-| Vercel + TiDB Cloud Database Connection
-|--------------------------------------------------------------------------
-*/
-
-$host = trim((string) (getenv('DB_HOST') ?: ''));
+$host = trim((string) getenv('DB_HOST'));
 $port = trim((string) (getenv('DB_PORT') ?: '4000'));
-$dbname = trim((string) (getenv('DB_NAME') ?: ''));
-$username = trim((string) (getenv('DB_USER') ?: ''));
-$password = (string) (getenv('DB_PASSWORD') ?: '');
+$dbname = trim((string) getenv('DB_NAME'));
+$username = trim((string) getenv('DB_USER'));
+$password = (string) getenv('DB_PASSWORD');
 
 if (
     $host === '' ||
@@ -20,18 +14,27 @@ if (
     $username === '' ||
     $password === ''
 ) {
-    error_log('TiDB configuration is incomplete.');
-
+    error_log('TiDB environment variables are missing.');
     die('Database configuration error.');
 }
 
 /*
 |--------------------------------------------------------------------------
-| TiDB Cloud TLS
+| TiDB Cloud CA Certificate
 |--------------------------------------------------------------------------
-|
-| Vercel + TiDB Cloud Public Endpoint
-|
+*/
+
+$caFile = dirname(__DIR__) . '/ca.pem';
+
+if (!is_readable($caFile)) {
+    error_log('TiDB CA certificate not found: ' . $caFile);
+    die('Database SSL configuration error.');
+}
+
+/*
+|--------------------------------------------------------------------------
+| PDO
+|--------------------------------------------------------------------------
 */
 
 $dsn = sprintf(
@@ -46,23 +49,9 @@ $options = [
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     PDO::ATTR_EMULATE_PREPARES => false,
 
-    /*
-     * Enable TLS.
-     */
-    PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
+    PDO::MYSQL_ATTR_SSL_CA => $caFile,
+    PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => true,
 ];
-
-/*
-|--------------------------------------------------------------------------
-| CA certificate
-|--------------------------------------------------------------------------
-*/
-
-$caFile = '/etc/ssl/certs/ca-certificates.crt';
-
-if (is_readable($caFile)) {
-    $options[PDO::MYSQL_ATTR_SSL_CA] = $caFile;
-}
 
 try {
 
@@ -72,12 +61,6 @@ try {
         $password,
         $options
     );
-
-    /*
-    |--------------------------------------------------------------------------
-    | Test connection
-    |--------------------------------------------------------------------------
-    */
 
     $pdo->query('SELECT 1');
 
