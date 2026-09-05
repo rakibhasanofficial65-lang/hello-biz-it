@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 /*
 |--------------------------------------------------------------------------
-| DATABASE CONFIGURATION - TiDB Cloud
+| DATABASE CONFIGURATION
 |--------------------------------------------------------------------------
 */
 
@@ -17,7 +17,7 @@ $password = (string) getenv('DB_PASSWORD');
 
 /*
 |--------------------------------------------------------------------------
-| CHECK ENVIRONMENT VARIABLES
+| CHECK DATABASE CONFIGURATION
 |--------------------------------------------------------------------------
 */
 
@@ -28,25 +28,20 @@ if (
     $password === ''
 ) {
     error_log('TiDB environment variables are missing.');
-
     die('Database configuration error.');
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| TiDB Cloud CA Certificate
+| TiDB Cloud CA CERTIFICATE
 |--------------------------------------------------------------------------
 */
 
 $caFile = dirname(__DIR__) . '/ca.pem';
 
 if (!is_readable($caFile)) {
-
-    error_log(
-        'TiDB CA certificate not found: ' . $caFile
-    );
-
+    error_log('TiDB CA certificate not found: ' . $caFile);
     die('Database SSL configuration error.');
 }
 
@@ -64,6 +59,19 @@ $dsn = sprintf(
     $dbname
 );
 
+$options = [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+
+    PDO::ATTR_DEFAULT_FETCH_MODE =>
+        PDO::FETCH_ASSOC,
+
+    PDO::ATTR_EMULATE_PREPARES =>
+        false,
+
+    PDO::MYSQL_ATTR_SSL_CA =>
+        $caFile
+];
+
 
 try {
 
@@ -71,29 +79,8 @@ try {
         $dsn,
         $username,
         $password,
-        [
-            PDO::ATTR_ERRMODE =>
-                PDO::ERRMODE_EXCEPTION,
-
-            PDO::ATTR_DEFAULT_FETCH_MODE =>
-                PDO::FETCH_ASSOC,
-
-            PDO::ATTR_EMULATE_PREPARES =>
-                false,
-
-            PDO::MYSQL_ATTR_SSL_CA =>
-                $caFile,
-
-            PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT =>
-                true
-        ]
+        $options
     );
-
-
-    error_log(
-        'TiDB connection successful.'
-    );
-
 
 } catch (PDOException $e) {
 
@@ -105,4 +92,4 @@ try {
     die(
         'Database connection failed.'
     );
-}s
+}
