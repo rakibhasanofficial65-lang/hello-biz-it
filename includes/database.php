@@ -8,6 +8,10 @@ $dbname = getenv('DB_NAME');
 $username = getenv('DB_USER');
 $password = getenv('DB_PASSWORD');
 
+error_log('DB DEBUG HOST=' . ($host ?? 'EMPTY'));
+error_log('DB DEBUG PORT=' . ($port ?? 'EMPTY'));
+error_log('DB DEBUG NAME=' . ($dbname ?? 'EMPTY'));
+error_log('DB DEBUG USER=' . ($username ?? 'EMPTY'));
 try {
 
     $pdo = new PDO(
