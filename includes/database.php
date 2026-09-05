@@ -2,33 +2,22 @@
 
 declare(strict_types=1);
 
-
 /*
 |--------------------------------------------------------------------------
-| TiDB ENVIRONMENT VARIABLES
+| DATABASE CONFIGURATION - TiDB Cloud
 |--------------------------------------------------------------------------
 */
 
 $host = trim((string) getenv('DB_HOST'));
-
-$port = trim(
-    (string) (getenv('DB_PORT') ?: '4000')
-);
-
-$dbname = trim(
-    (string) getenv('DB_NAME')
-);
-
-$username = trim(
-    (string) getenv('DB_USER')
-);
-
+$port = trim((string) (getenv('DB_PORT') ?: '4000'));
+$dbname = trim((string) getenv('DB_NAME'));
+$username = trim((string) getenv('DB_USER'));
 $password = (string) getenv('DB_PASSWORD');
 
 
 /*
 |--------------------------------------------------------------------------
-| CHECK CONFIGURATION
+| CHECK ENVIRONMENT VARIABLES
 |--------------------------------------------------------------------------
 */
 
@@ -38,10 +27,7 @@ if (
     $username === '' ||
     $password === ''
 ) {
-
-    error_log(
-        'TiDB environment variables are missing.'
-    );
+    error_log('TiDB environment variables are missing.');
 
     die('Database configuration error.');
 }
@@ -49,12 +35,11 @@ if (
 
 /*
 |--------------------------------------------------------------------------
-| CA CERTIFICATE
+| TiDB Cloud CA Certificate
 |--------------------------------------------------------------------------
 */
 
 $caFile = dirname(__DIR__) . '/ca.pem';
-
 
 if (!is_readable($caFile)) {
 
@@ -68,7 +53,7 @@ if (!is_readable($caFile)) {
 
 /*
 |--------------------------------------------------------------------------
-| DATABASE DSN
+| DATABASE CONNECTION
 |--------------------------------------------------------------------------
 */
 
@@ -80,49 +65,35 @@ $dsn = sprintf(
 );
 
 
-/*
-|--------------------------------------------------------------------------
-| PDO OPTIONS
-|--------------------------------------------------------------------------
-*/
-
-$options = [
-
-    PDO::ATTR_ERRMODE =>
-        PDO::ERRMODE_EXCEPTION,
-
-    PDO::ATTR_DEFAULT_FETCH_MODE =>
-        PDO::FETCH_ASSOC,
-
-    PDO::ATTR_EMULATE_PREPARES =>
-        false,
-
-    Pdo\Mysql::ATTR_SSL_CA =>
-        $caFile,
-
-    Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT =>
-        true
-];
-
-
-/*
-|--------------------------------------------------------------------------
-| CONNECT TO TIDB
-|--------------------------------------------------------------------------
-*/
-
 try {
 
     $pdo = new PDO(
         $dsn,
         $username,
         $password,
-        $options
+        [
+            PDO::ATTR_ERRMODE =>
+                PDO::ERRMODE_EXCEPTION,
+
+            PDO::ATTR_DEFAULT_FETCH_MODE =>
+                PDO::FETCH_ASSOC,
+
+            PDO::ATTR_EMULATE_PREPARES =>
+                false,
+
+            PDO::MYSQL_ATTR_SSL_CA =>
+                $caFile,
+
+            PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT =>
+                true
+        ]
     );
+
 
     error_log(
         'TiDB connection successful.'
     );
+
 
 } catch (PDOException $e) {
 
@@ -134,4 +105,4 @@ try {
     die(
         'Database connection failed.'
     );
-}
+}s
