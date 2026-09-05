@@ -13,41 +13,6 @@ ini_set('display_startup_errors', '1');
 
 /*
 |--------------------------------------------------------------------------
-| TIMEZONE
-|--------------------------------------------------------------------------
-*/
-
-date_default_timezone_set('Asia/Dhaka');
-
-
-/*
-|--------------------------------------------------------------------------
-| SITE CONFIGURATION
-|--------------------------------------------------------------------------
-*/
-
-define(
-    'SITE_NAME',
-    getenv('SITE_NAME') ?: 'Hello Biz IT'
-);
-
-define(
-    'SITE_URL',
-    getenv('SITE_URL') ?: 'https://hello-biz-it.vercel.app'
-);
-
-/*
-| Old code compatibility
-*/
-
-define(
-    'BASE_URL',
-    getenv('BASE_URL') ?: SITE_URL
-);
-
-
-/*
-|--------------------------------------------------------------------------
 | SESSION CONFIGURATION
 |--------------------------------------------------------------------------
 */
@@ -56,11 +21,9 @@ if (session_status() === PHP_SESSION_NONE) {
 
     $isHttps =
         (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-        ||
-        (
+        || (
             isset($_SERVER['HTTP_X_FORWARDED_PROTO'])
-            &&
-            strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https'
+            && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'
         );
 
     session_set_cookie_params([
@@ -77,17 +40,28 @@ if (session_status() === PHP_SESSION_NONE) {
 
 /*
 |--------------------------------------------------------------------------
-| DATABASE CONFIGURATION
+| SITE CONFIGURATION
 |--------------------------------------------------------------------------
-|
-| Vercel Environment Variables:
-|
-| DB_HOST
-| DB_PORT
-| DB_NAME
-| DB_USER
-| DB_PASSWORD
-|
+*/
+
+define('SITE_NAME', 'Hello Biz IT');
+
+define(
+    'SITE_URL',
+    'https://hello-biz-it.vercel.app'
+);
+
+define(
+    'BASE_URL',
+    'https://hello-biz-it.vercel.app'
+);
+
+date_default_timezone_set('Asia/Dhaka');
+
+
+/*
+|--------------------------------------------------------------------------
+| DATABASE CONFIGURATION
 |--------------------------------------------------------------------------
 */
 
@@ -100,26 +74,22 @@ $dbPass = getenv('DB_PASSWORD');
 
 /*
 |--------------------------------------------------------------------------
-| CHECK DATABASE VARIABLES
+| CHECK DATABASE ENVIRONMENT VARIABLES
 |--------------------------------------------------------------------------
 */
 
 if (
-    !$dbHost ||
-    !$dbName ||
-    !$dbUser ||
-    !$dbPass
+    empty($dbHost) ||
+    empty($dbName) ||
+    empty($dbUser) ||
+    empty($dbPass)
 ) {
 
     error_log(
         'TiDB environment variables are missing.'
     );
 
-    die(
-        'Database configuration is missing. ' .
-        'Please check DB_HOST, DB_PORT, DB_NAME, DB_USER and DB_PASSWORD ' .
-        'in Vercel Environment Variables.'
-    );
+    die('Database configuration error.');
 }
 
 
@@ -132,90 +102,26 @@ if (
 try {
 
     $dsn =
-        'mysql:host=' . $dbHost .
-        ';port=' . $dbPort .
-        ';dbname=' . $dbName .
-        ';charset=utf8mb4';
+        "mysql:host={$dbHost};" .
+        "port={$dbPort};" .
+        "dbname={$dbName};" .
+        "charset=utf8mb4";
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | PDO OPTIONS
-    |--------------------------------------------------------------------------
-    */
-
-    $pdoOptions = [
-
-        PDO::ATTR_ERRMODE =>
-            PDO::ERRMODE_EXCEPTION,
-
-        PDO::ATTR_DEFAULT_FETCH_MODE =>
-            PDO::FETCH_ASSOC,
-
-        PDO::ATTR_EMULATE_PREPARES =>
-            false
-    ];
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | PHP 8.5+
-    |--------------------------------------------------------------------------
-    |
-    | Avoid deprecated:
-    | PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT
-    |
-    */
-
-    if (
-        class_exists('Pdo\\Mysql') &&
-        defined('Pdo\\Mysql::ATTR_SSL_VERIFY_SERVER_CERT')
-    ) {
-
-        $pdoOptions[
-            constant('Pdo\\Mysql::ATTR_SSL_VERIFY_SERVER_CERT')
-        ] = false;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | OLD PHP COMPATIBILITY
-    |--------------------------------------------------------------------------
-    */
-
-    elseif (
-        defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT')
-    ) {
-
-        $pdoOptions[
-            constant('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT')
-        ] = false;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | CONNECT TO TIDB CLOUD
-    |--------------------------------------------------------------------------
-    */
 
     $pdo = new PDO(
         $dsn,
         $dbUser,
         $dbPass,
-        $pdoOptions
-    );
+        [
+            PDO::ATTR_ERRMODE =>
+                PDO::ERRMODE_EXCEPTION,
 
+            PDO::ATTR_DEFAULT_FETCH_MODE =>
+                PDO::FETCH_ASSOC,
 
-    /*
-    |--------------------------------------------------------------------------
-    | DATABASE CONNECTION SUCCESS
-    |--------------------------------------------------------------------------
-    */
-
-    error_log(
-        'TiDB connection successful.'
+            PDO::ATTR_EMULATE_PREPARES =>
+                false
+        ]
     );
 
 
