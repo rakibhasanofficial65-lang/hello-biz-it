@@ -1,20 +1,40 @@
 <?php
 
+/*
+|--------------------------------------------------------------------------
+| ADMIN APPLICATION VIEW
+|--------------------------------------------------------------------------
+*/
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/database.php';
 
-$page_title = "Messages | Admin";
 
-require_once __DIR__ . '/includes/header.php';
+/*
+|--------------------------------------------------------------------------
+| ADMIN AUTH CHECK
+|--------------------------------------------------------------------------
+*/
 
-
-session_start();
-
-if (!isset($_SESSION['admin_id'])) {
+if (
+    empty($_SESSION['admin_id']) ||
+    empty($_SESSION['admin_logged_in'])
+) {
     header('Location: login.php');
     exit;
 }
+
+
+/*
+|--------------------------------------------------------------------------
+| APPLICATION ID
+|--------------------------------------------------------------------------
+*/
 
 $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 
@@ -26,20 +46,31 @@ if ($id <= 0) {
 
 /*
 |--------------------------------------------------------------------------
-| UPDATE APPLICATION STATUS
+| UPDATE STATUS
 |--------------------------------------------------------------------------
+|
+| IMPORTANT:
+| Database enum:
+| new
+| reviewing
+| shortlisted
+| rejected
+| hired
+| pending
+|
 */
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $status = $_POST['status'] ?? '';
+    $status = trim($_POST['status'] ?? '');
 
     $allowedStatuses = [
+        'new',
         'pending',
-        'reviewed',
+        'reviewing',
         'shortlisted',
         'rejected',
-        'selected'
+        'hired'
     ];
 
     if (in_array($status, $allowedStatuses, true)) {
@@ -56,7 +87,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
     }
 
-    header("Location: application-view.php?id=" . $id);
+    header(
+        'Location: application-view.php?id=' .
+        $id .
+        '&updated=1'
+    );
+
     exit;
 }
 
@@ -84,21 +120,58 @@ $stmt->execute([$id]);
 
 $application = $stmt->fetch(PDO::FETCH_ASSOC);
 
+
+/*
+|--------------------------------------------------------------------------
+| APPLICATION NOT FOUND
+|--------------------------------------------------------------------------
+*/
+
 if (!$application) {
     header('Location: applications.php');
     exit;
 }
 
 
-$page_title = 'Applicant Details | ' . SITE_NAME;
+/*
+|--------------------------------------------------------------------------
+| PAGE TITLE
+|--------------------------------------------------------------------------
+*/
 
-include __DIR__ . '/includes/header.php';
+$page_title =
+    'Applicant Details | ' .
+    ($application['full_name'] ?? 'Application');
+
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN HEADER
+|--------------------------------------------------------------------------
+*/
+
+require_once __DIR__ . '/includes/header.php';
 
 ?>
+
 
 <div class="admin-page">
 
     <div class="admin-container">
+
+
+        <!-- =====================================================
+             SUCCESS MESSAGE
+        ====================================================== -->
+
+        <?php if (isset($_GET['updated'])): ?>
+
+            <div class="notice">
+                Application status updated successfully.
+            </div>
+
+        <?php endif; ?>
+
 
         <!-- =====================================================
              PAGE HEADER
@@ -122,6 +195,7 @@ include __DIR__ . '/includes/header.php';
 
             </div>
 
+
             <a
                 href="applications.php"
                 class="admin-btn admin-btn-secondary"
@@ -133,18 +207,21 @@ include __DIR__ . '/includes/header.php';
 
 
         <!-- =====================================================
-             APPLICANT TOP CARD
+             APPLICANT PROFILE
         ====================================================== -->
 
         <div class="applicant-profile-card">
+
 
             <div class="applicant-photo">
 
                 <?php if (!empty($application['photo_file'])): ?>
 
                     <img
-                        src="<?php echo base_url($application['photo_file']); ?>"
-                        alt="<?php echo escape($application['full_name']); ?>"
+                        src="<?php echo escape(
+                            base_url($application['photo_file'])
+                        ); ?>"
+                        alt="Applicant Photo"
                     >
 
                 <?php else: ?>
@@ -165,15 +242,33 @@ include __DIR__ . '/includes/header.php';
                 </span>
 
                 <h2>
-                    <?php echo escape($application['full_name']); ?>
+                    <?php
+                    echo escape(
+                        $application['full_name']
+                    );
+                    ?>
                 </h2>
 
                 <p>
-                    <?php echo escape($application['job_title'] ?? 'Position not available'); ?>
+                    <?php
+                    echo escape(
+                        $application['job_title']
+                        ?? 'Position not available'
+                    );
+                    ?>
                 </p>
 
-                <span class="application-status status-<?php echo escape($application['status']); ?>">
-                    <?php echo ucfirst(escape($application['status'])); ?>
+
+                <span
+                    class="application-status status-<?php
+                        echo escape($application['status']);
+                    ?>"
+                >
+                    <?php
+                    echo ucfirst(
+                        escape($application['status'])
+                    );
+                    ?>
                 </span>
 
             </div>
@@ -181,11 +276,15 @@ include __DIR__ . '/includes/header.php';
         </div>
 
 
+        <!-- =====================================================
+             DETAILS LAYOUT
+        ====================================================== -->
+
         <div class="application-details-layout">
 
 
             <!-- =================================================
-                 MAIN INFORMATION
+                 MAIN
             ================================================== -->
 
             <div class="application-details-main">
@@ -197,11 +296,10 @@ include __DIR__ . '/includes/header.php';
 
                     <div class="detail-card-heading">
 
-                        <span>
-                            01
-                        </span>
+                        <span>01</span>
 
                         <div>
+
                             <h3>
                                 Personal Information
                             </h3>
@@ -209,12 +307,14 @@ include __DIR__ . '/includes/header.php';
                             <p>
                                 Candidate contact and basic information.
                             </p>
+
                         </div>
 
                     </div>
 
 
                     <div class="detail-grid">
+
 
                         <div class="detail-item">
 
@@ -223,7 +323,11 @@ include __DIR__ . '/includes/header.php';
                             </span>
 
                             <strong>
-                                <?php echo escape($application['full_name']); ?>
+                                <?php
+                                echo escape(
+                                    $application['full_name']
+                                );
+                                ?>
                             </strong>
 
                         </div>
@@ -235,8 +339,16 @@ include __DIR__ . '/includes/header.php';
                                 EMAIL
                             </span>
 
-                            <a href="mailto:<?php echo escape($application['email']); ?>">
-                                <?php echo escape($application['email']); ?>
+                            <a
+                                href="mailto:<?php echo escape(
+                                    $application['email']
+                                ); ?>"
+                            >
+                                <?php
+                                echo escape(
+                                    $application['email']
+                                );
+                                ?>
                             </a>
 
                         </div>
@@ -248,8 +360,16 @@ include __DIR__ . '/includes/header.php';
                                 PHONE
                             </span>
 
-                            <a href="tel:<?php echo escape($application['phone']); ?>">
-                                <?php echo escape($application['phone']); ?>
+                            <a
+                                href="tel:<?php echo escape(
+                                    $application['phone']
+                                ); ?>"
+                            >
+                                <?php
+                                echo escape(
+                                    $application['phone']
+                                );
+                                ?>
                             </a>
 
                         </div>
@@ -262,10 +382,16 @@ include __DIR__ . '/includes/header.php';
                             </span>
 
                             <strong>
-                                <?php echo escape($application['education']); ?>
+                                <?php
+                                echo escape(
+                                    $application['education']
+                                    ?? 'N/A'
+                                );
+                                ?>
                             </strong>
 
                         </div>
+
 
                     </div>
 
@@ -278,11 +404,10 @@ include __DIR__ . '/includes/header.php';
 
                     <div class="detail-card-heading">
 
-                        <span>
-                            02
-                        </span>
+                        <span>02</span>
 
                         <div>
+
                             <h3>
                                 Position Information
                             </h3>
@@ -290,12 +415,14 @@ include __DIR__ . '/includes/header.php';
                             <p>
                                 Job information related to this application.
                             </p>
+
                         </div>
 
                     </div>
 
 
                     <div class="detail-grid">
+
 
                         <div class="detail-item">
 
@@ -304,7 +431,12 @@ include __DIR__ . '/includes/header.php';
                             </span>
 
                             <strong>
-                                <?php echo escape($application['job_title'] ?? 'N/A'); ?>
+                                <?php
+                                echo escape(
+                                    $application['job_title']
+                                    ?? 'N/A'
+                                );
+                                ?>
                             </strong>
 
                         </div>
@@ -317,7 +449,12 @@ include __DIR__ . '/includes/header.php';
                             </span>
 
                             <strong>
-                                <?php echo escape($application['job_type'] ?? 'N/A'); ?>
+                                <?php
+                                echo escape(
+                                    $application['job_type']
+                                    ?? 'N/A'
+                                );
+                                ?>
                             </strong>
 
                         </div>
@@ -330,7 +467,12 @@ include __DIR__ . '/includes/header.php';
                             </span>
 
                             <strong>
-                                <?php echo escape($application['location'] ?? 'N/A'); ?>
+                                <?php
+                                echo escape(
+                                    $application['location']
+                                    ?? 'N/A'
+                                );
+                                ?>
                             </strong>
 
                         </div>
@@ -343,10 +485,22 @@ include __DIR__ . '/includes/header.php';
                             </span>
 
                             <strong>
-                                <?php echo escape($application['created_at'] ?? 'N/A'); ?>
+                                <?php
+                                echo !empty(
+                                    $application['created_at']
+                                )
+                                    ? date(
+                                        'd M Y, h:i A',
+                                        strtotime(
+                                            $application['created_at']
+                                        )
+                                    )
+                                    : 'N/A';
+                                ?>
                             </strong>
 
                         </div>
+
 
                     </div>
 
@@ -359,11 +513,10 @@ include __DIR__ . '/includes/header.php';
 
                     <div class="detail-card-heading">
 
-                        <span>
-                            03
-                        </span>
+                        <span>03</span>
 
                         <div>
+
                             <h3>
                                 Work Experience
                             </h3>
@@ -371,6 +524,7 @@ include __DIR__ . '/includes/header.php';
                             <p>
                                 Candidate's previous experience.
                             </p>
+
                         </div>
 
                     </div>
@@ -378,9 +532,17 @@ include __DIR__ . '/includes/header.php';
 
                     <div class="detail-long-text">
 
-                        <?php if (!empty($application['experience'])): ?>
+                        <?php if (
+                            !empty($application['experience'])
+                        ): ?>
 
-                            <?php echo nl2br(escape($application['experience'])); ?>
+                            <?php
+                            echo nl2br(
+                                escape(
+                                    $application['experience']
+                                )
+                            );
+                            ?>
 
                         <?php else: ?>
 
@@ -401,11 +563,10 @@ include __DIR__ . '/includes/header.php';
 
                     <div class="detail-card-heading">
 
-                        <span>
-                            04
-                        </span>
+                        <span>04</span>
 
                         <div>
+
                             <h3>
                                 Address
                             </h3>
@@ -413,6 +574,7 @@ include __DIR__ . '/includes/header.php';
                             <p>
                                 Candidate's current address.
                             </p>
+
                         </div>
 
                     </div>
@@ -420,7 +582,25 @@ include __DIR__ . '/includes/header.php';
 
                     <div class="detail-long-text">
 
-                        <?php echo nl2br(escape($application['address'])); ?>
+                        <?php if (
+                            !empty($application['address'])
+                        ): ?>
+
+                            <?php
+                            echo nl2br(
+                                escape(
+                                    $application['address']
+                                )
+                            );
+                            ?>
+
+                        <?php else: ?>
+
+                            <span class="empty-value">
+                                No address provided.
+                            </span>
+
+                        <?php endif; ?>
 
                     </div>
 
@@ -433,11 +613,10 @@ include __DIR__ . '/includes/header.php';
 
                     <div class="detail-card-heading">
 
-                        <span>
-                            05
-                        </span>
+                        <span>05</span>
 
                         <div>
+
                             <h3>
                                 Equipment Availability
                             </h3>
@@ -445,12 +624,14 @@ include __DIR__ . '/includes/header.php';
                             <p>
                                 Computer and laptop availability.
                             </p>
+
                         </div>
 
                     </div>
 
 
                     <div class="equipment-result-grid">
+
 
                         <div>
 
@@ -459,11 +640,28 @@ include __DIR__ . '/includes/header.php';
                             </span>
 
                             <strong>
+
                                 <?php
-                                echo $application['computer_available'] === 'yes'
-                                    ? '✓ Yes, has a computer'
-                                    : '✕ No, does not have a computer';
+
+                                if (
+                                    strtolower(
+                                        (string)
+                                        $application[
+                                            'computer_available'
+                                        ]
+                                    ) === 'yes'
+                                ) {
+
+                                    echo '✓ Yes, has a computer';
+
+                                } else {
+
+                                    echo '✕ No, does not have a computer';
+
+                                }
+
                                 ?>
+
                             </strong>
 
                         </div>
@@ -476,14 +674,32 @@ include __DIR__ . '/includes/header.php';
                             </span>
 
                             <strong>
+
                                 <?php
-                                echo $application['laptop_available'] === 'yes'
-                                    ? '✓ Yes, has a laptop'
-                                    : '✕ No, does not have a laptop';
+
+                                if (
+                                    strtolower(
+                                        (string)
+                                        $application[
+                                            'laptop_available'
+                                        ]
+                                    ) === 'yes'
+                                ) {
+
+                                    echo '✓ Yes, has a laptop';
+
+                                } else {
+
+                                    echo '✕ No, does not have a laptop';
+
+                                }
+
                                 ?>
+
                             </strong>
 
                         </div>
+
 
                     </div>
 
@@ -496,11 +712,10 @@ include __DIR__ . '/includes/header.php';
 
                     <div class="detail-card-heading">
 
-                        <span>
-                            06
-                        </span>
+                        <span>06</span>
 
                         <div>
+
                             <h3>
                                 Cover Message
                             </h3>
@@ -508,6 +723,7 @@ include __DIR__ . '/includes/header.php';
                             <p>
                                 Additional information from the applicant.
                             </p>
+
                         </div>
 
                     </div>
@@ -515,9 +731,17 @@ include __DIR__ . '/includes/header.php';
 
                     <div class="detail-long-text">
 
-                        <?php if (!empty($application['message'])): ?>
+                        <?php if (
+                            !empty($application['message'])
+                        ): ?>
 
-                            <?php echo nl2br(escape($application['message'])); ?>
+                            <?php
+                            echo nl2br(
+                                escape(
+                                    $application['message']
+                                )
+                            );
+                            ?>
 
                         <?php else: ?>
 
@@ -530,6 +754,7 @@ include __DIR__ . '/includes/header.php';
                     </div>
 
                 </div>
+
 
             </div>
 
@@ -558,11 +783,18 @@ include __DIR__ . '/includes/header.php';
                     </p>
 
 
-                    <?php if (!empty($application['photo_file'])): ?>
+                    <?php if (
+                        !empty($application['photo_file'])
+                    ): ?>
 
                         <a
-                            href="<?php echo base_url($application['photo_file']); ?>"
+                            href="<?php echo escape(
+                                base_url(
+                                    $application['photo_file']
+                                )
+                            ); ?>"
                             target="_blank"
+                            rel="noopener"
                             class="admin-btn admin-btn-secondary full-width"
                         >
                             🖼 View Photo
@@ -571,23 +803,47 @@ include __DIR__ . '/includes/header.php';
                     <?php endif; ?>
 
 
-                    <?php if (!empty($application['cv_file'])): ?>
+                    <?php if (
+                        !empty($application['cv_file'])
+                    ): ?>
 
                         <a
-                            href="<?php echo base_url($application['cv_file']); ?>"
+                            href="<?php echo escape(
+                                base_url(
+                                    $application['cv_file']
+                                )
+                            ); ?>"
                             target="_blank"
+                            rel="noopener"
                             class="admin-btn admin-btn-primary full-width"
                         >
                             📄 View CV
                         </a>
 
+
                         <a
-                            href="<?php echo base_url($application['cv_file']); ?>"
+                            href="<?php echo escape(
+                                base_url(
+                                    $application['cv_file']
+                                )
+                            ); ?>"
                             download
                             class="admin-btn admin-btn-secondary full-width"
                         >
                             ↓ Download CV
                         </a>
+
+                    <?php endif; ?>
+
+
+                    <?php if (
+                        empty($application['photo_file']) &&
+                        empty($application['cv_file'])
+                    ): ?>
+
+                        <p class="empty-value">
+                            No files uploaded.
+                        </p>
 
                     <?php endif; ?>
 
@@ -620,39 +876,76 @@ include __DIR__ . '/includes/header.php';
                         >
 
                             <option
+                                value="new"
+                                <?php echo
+                                    $application['status'] === 'new'
+                                    ? 'selected'
+                                    : '';
+                                ?>
+                            >
+                                New
+                            </option>
+
+
+                            <option
                                 value="pending"
-                                <?php echo $application['status'] === 'pending' ? 'selected' : ''; ?>
+                                <?php echo
+                                    $application['status'] === 'pending'
+                                    ? 'selected'
+                                    : '';
+                                ?>
                             >
                                 Pending
                             </option>
 
+
                             <option
-                                value="reviewed"
-                                <?php echo $application['status'] === 'reviewed' ? 'selected' : ''; ?>
+                                value="reviewing"
+                                <?php echo
+                                    $application['status'] === 'reviewing'
+                                    ? 'selected'
+                                    : '';
+                                ?>
                             >
-                                Reviewed
+                                Reviewing
                             </option>
+
 
                             <option
                                 value="shortlisted"
-                                <?php echo $application['status'] === 'shortlisted' ? 'selected' : ''; ?>
+                                <?php echo
+                                    $application['status'] === 'shortlisted'
+                                    ? 'selected'
+                                    : '';
+                                ?>
                             >
                                 Shortlisted
                             </option>
 
+
                             <option
-                                value="selected"
-                                <?php echo $application['status'] === 'selected' ? 'selected' : ''; ?>
+                                value="hired"
+                                <?php echo
+                                    $application['status'] === 'hired'
+                                    ? 'selected'
+                                    : '';
+                                ?>
                             >
-                                Selected
+                                Hired
                             </option>
+
 
                             <option
                                 value="rejected"
-                                <?php echo $application['status'] === 'rejected' ? 'selected' : ''; ?>
+                                <?php echo
+                                    $application['status'] === 'rejected'
+                                    ? 'selected'
+                                    : '';
+                                ?>
                             >
                                 Rejected
                             </option>
+
 
                         </select>
 
@@ -682,29 +975,44 @@ include __DIR__ . '/includes/header.php';
                     </h3>
 
 
-                    <a
-                        href="mailto:<?php echo escape($application['email']); ?>"
-                        class="admin-btn admin-btn-primary full-width"
-                    >
-                        ✉ Send Email
-                    </a>
+                    <?php if (!empty($application['email'])): ?>
+
+                        <a
+                            href="mailto:<?php echo escape(
+                                $application['email']
+                            ); ?>"
+                            class="admin-btn admin-btn-primary full-width"
+                        >
+                            ✉ Send Email
+                        </a>
+
+                    <?php endif; ?>
 
 
-                    <a
-                        href="tel:<?php echo escape($application['phone']); ?>"
-                        class="admin-btn admin-btn-secondary full-width"
-                    >
-                        ☎ Call Applicant
-                    </a>
+                    <?php if (!empty($application['phone'])): ?>
+
+                        <a
+                            href="tel:<?php echo escape(
+                                $application['phone']
+                            ); ?>"
+                            class="admin-btn admin-btn-secondary full-width"
+                        >
+                            ☎ Call Applicant
+                        </a>
+
+                    <?php endif; ?>
 
                 </div>
 
+
             </aside>
+
 
         </div>
 
     </div>
 
 </div>
+
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
