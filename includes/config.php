@@ -1,23 +1,34 @@
 <?php
 
-define('SITE_NAME', 'Hello Biz IT');
-
 /*
 |--------------------------------------------------------------------------
-| LIVE WEBSITE URL
+| SESSION CONFIGURATION
 |--------------------------------------------------------------------------
 */
 
-define(
-    'SITE_URL',
-    getenv('SITE_URL') ?: 'https://hello-biz-it.vercel.app'
-);
+if (session_status() === PHP_SESSION_NONE) {
+
+    $isHttps = (
+        !empty($_SERVER['HTTPS']) &&
+        $_SERVER['HTTPS'] !== 'off'
+    );
+
+    session_set_cookie_params([
+        'lifetime' => 60 * 60 * 24 * 30, // 30 days
+        'path' => '/',
+        'secure' => $isHttps,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
+
+    session_start();
+}
 
 
 /*
 |--------------------------------------------------------------------------
-| TIMEZONE
+| SITE CONFIGURATION
 |--------------------------------------------------------------------------
 */
 
-date_default_timezone_set('Asia/Dhaka');
+// আপনার existing config.php-এর বাকি code এখানে থাকবে
