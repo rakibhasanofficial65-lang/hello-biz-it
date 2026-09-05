@@ -28,7 +28,7 @@
                 </p>
 
                 <p class="footer-address">
-                    Burail Road, Kalir Bazar,<br>
+                    3rd Floor, Hello Biz It,<br>Burail College Road, Kalir Bazar,<br>
                     Fulchari, Gaibandha-5760, Bangladesh
                 </p>
 
