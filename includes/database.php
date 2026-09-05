@@ -2,22 +2,33 @@
 
 declare(strict_types=1);
 
+
 /*
 |--------------------------------------------------------------------------
-| DATABASE CONFIGURATION
+| DATABASE ENVIRONMENT VARIABLES
 |--------------------------------------------------------------------------
 */
 
 $host = trim((string) getenv('DB_HOST'));
-$port = trim((string) (getenv('DB_PORT') ?: '4000'));
-$dbname = trim((string) getenv('DB_NAME'));
-$username = trim((string) getenv('DB_USER'));
+
+$port = trim(
+    (string) (getenv('DB_PORT') ?: '4000')
+);
+
+$dbname = trim(
+    (string) getenv('DB_NAME')
+);
+
+$username = trim(
+    (string) getenv('DB_USER')
+);
+
 $password = (string) getenv('DB_PASSWORD');
 
 
 /*
 |--------------------------------------------------------------------------
-| CHECK ENVIRONMENT VARIABLES
+| CHECK DATABASE CONFIGURATION
 |--------------------------------------------------------------------------
 */
 
@@ -27,9 +38,14 @@ if (
     $username === '' ||
     $password === ''
 ) {
-    error_log('TiDB environment variables are missing.');
 
-    die('Database configuration error.');
+    error_log(
+        'TiDB environment variables are missing.'
+    );
+
+    die(
+        'Database configuration error.'
+    );
 }
 
 
@@ -41,19 +57,22 @@ if (
 
 $caFile = dirname(__DIR__) . '/ca.pem';
 
+
 if (!is_readable($caFile)) {
 
     error_log(
         'TiDB CA certificate not found: ' . $caFile
     );
 
-    die('Database SSL configuration error.');
+    die(
+        'Database SSL configuration error.'
+    );
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| PDO CONNECTION
+| PDO DSN
 |--------------------------------------------------------------------------
 */
 
@@ -64,6 +83,12 @@ $dsn = sprintf(
     $dbname
 );
 
+
+/*
+|--------------------------------------------------------------------------
+| DATABASE CONNECTION
+|--------------------------------------------------------------------------
+*/
 
 try {
 
@@ -90,7 +115,9 @@ try {
     );
 
 
-    error_log('TiDB connection successful.');
+    error_log(
+        'TiDB connection successful.'
+    );
 
 
 } catch (PDOException $e) {
