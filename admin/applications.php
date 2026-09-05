@@ -1111,12 +1111,12 @@ foreach ($applications as $application) {
 
                                         <!-- VIEW -->
 
-                                        <a
-                                            href="applications.php?view=<?php echo (int) $application['id']; ?>"
-                                            class="action-btn"
-                                        >
-                                            View Details →
-                                        </a>
+                            <a
+    href="application-view.php?id=<?php echo (int) $application['id']; ?>"
+    class="action-btn"
+>
+    View Details →
+</a>
 
 
                                         <!-- STATUS -->
