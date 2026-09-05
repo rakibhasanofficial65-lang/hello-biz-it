@@ -1,8 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
-
 /*
 |--------------------------------------------------------------------------
 | ERROR REPORTING
@@ -18,10 +15,6 @@ ini_set('display_startup_errors', '1');
 |--------------------------------------------------------------------------
 | SESSION CONFIGURATION
 |--------------------------------------------------------------------------
-|
-| Login session 30 days থাকবে।
-| Browser refresh করলে logout হবে না।
-|
 */
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -31,7 +24,8 @@ if (session_status() === PHP_SESSION_NONE) {
         ||
         (
             isset($_SERVER['HTTP_X_FORWARDED_PROTO'])
-            && strtolower((string) $_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https'
+            &&
+            $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'
         );
 
     session_set_cookie_params([
@@ -52,26 +46,11 @@ if (session_status() === PHP_SESSION_NONE) {
 |--------------------------------------------------------------------------
 */
 
-define(
-    'SITE_NAME',
-    'Hello Biz IT'
-);
+define('SITE_NAME', 'Hello Biz IT');
 
 define(
     'SITE_URL',
     'https://hello-biz-it.vercel.app'
 );
-
-define(
-    'BASE_URL',
-    'https://hello-biz-it.vercel.app'
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| TIMEZONE
-|--------------------------------------------------------------------------
-*/
 
 date_default_timezone_set('Asia/Dhaka');
