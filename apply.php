@@ -8,7 +8,6 @@ require_once __DIR__ . '/includes/database.php';
 
 $page_title = "Apply Now | " . SITE_NAME;
 
-
 /*
 |--------------------------------------------------------------------------
 | GET JOB ID
@@ -21,7 +20,6 @@ if ($job_id <= 0) {
     header("Location: career.php#open-positions");
     exit;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -52,7 +50,6 @@ if (!$job) {
     exit;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | FORM VARIABLES
@@ -71,15 +68,36 @@ $computer_available = '';
 $laptop_available = '';
 $message = '';
 
+/*
+|--------------------------------------------------------------------------
+| VERCEL BLOB CONFIG
+|--------------------------------------------------------------------------
+|
+| The Blob store is PUBLIC.
+|
+| Required Vercel Environment Variable:
+|
+| BLOB_READ_WRITE_TOKEN
+|
+*/
+
+function getBlobToken(): string
+{
+    $token = getenv('BLOB_READ_WRITE_TOKEN');
+
+    if (!$token) {
+        throw new RuntimeException(
+            'BLOB_READ_WRITE_TOKEN is not configured in Vercel.'
+        );
+    }
+
+    return trim($token);
+}
 
 /*
 |--------------------------------------------------------------------------
-| VERCEL BLOB UPLOAD
+| UPLOAD TO VERCEL BLOB
 |--------------------------------------------------------------------------
-|
-| Vercel serverless filesystem is temporary.
-| Therefore uploaded files are stored in Vercel Blob.
-|
 */
 
 function uploadToVercelBlob(
@@ -88,24 +106,20 @@ function uploadToVercelBlob(
     string $contentType
 ): string {
 
-    $token = getenv('BLOB_READ_WRITE_TOKEN') ?: '';
-
-    if ($token === '') {
-        throw new RuntimeException(
-            'BLOB_READ_WRITE_TOKEN is not configured.'
-        );
-    }
+    $token = getBlobToken();
 
     if (
         !isset($file['tmp_name']) ||
         !is_uploaded_file($file['tmp_name'])
     ) {
         throw new RuntimeException(
-            'Uploaded file is not valid.'
+            'Uploaded file is invalid.'
         );
     }
 
-    $fileContents = file_get_contents($file['tmp_name']);
+    $fileContents = file_get_contents(
+        $file['tmp_name']
+    );
 
     if ($fileContents === false) {
         throw new RuntimeException(
@@ -113,10 +127,9 @@ function uploadToVercelBlob(
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
-    | VERCEL BLOB API URL
+    | VERCEL BLOB REST API
     |--------------------------------------------------------------------------
     */
 
@@ -124,14 +137,7 @@ function uploadToVercelBlob(
         'https://blob.vercel-storage.com/' .
         ltrim($pathname, '/');
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | CURL
-    |--------------------------------------------------------------------------
-    */
-
-    $ch = curl_init($url);
+    $ch = curl_init();
 
     if ($ch === false) {
         throw new RuntimeException(
@@ -139,8 +145,9 @@ function uploadToVercelBlob(
         );
     }
 
-
     curl_setopt_array($ch, [
+
+        CURLOPT_URL => $url,
 
         CURLOPT_CUSTOMREQUEST => 'PUT',
 
@@ -150,27 +157,31 @@ function uploadToVercelBlob(
 
         CURLOPT_FOLLOWLOCATION => true,
 
+        CURLOPT_HEADER => false,
+
         CURLOPT_HTTPHEADER => [
 
             'Authorization: Bearer ' . $token,
 
             'x-api-version: 7',
 
-            'x-content-type: ' . $contentType,
+            'Content-Type: ' . $contentType,
 
-            'Content-Type: ' . $contentType
+            'x-content-type: ' . $contentType
 
         ],
 
-        CURLOPT_CONNECTTIMEOUT => 15,
+        CURLOPT_CONNECTTIMEOUT => 20,
 
-        CURLOPT_TIMEOUT => 90
+        CURLOPT_TIMEOUT => 120,
+
+        CURLOPT_SSL_VERIFYPEER => true,
+
+        CURLOPT_SSL_VERIFYHOST => 2
 
     ]);
 
-
     $response = curl_exec($ch);
-
 
     if ($response === false) {
 
@@ -179,23 +190,20 @@ function uploadToVercelBlob(
         curl_close($ch);
 
         throw new RuntimeException(
-            'Vercel Blob connection failed: ' . $curlError
+            'Vercel Blob CURL error: ' . $curlError
         );
     }
-
 
     $httpCode = (int) curl_getinfo(
         $ch,
         CURLINFO_HTTP_CODE
     );
 
-
     curl_close($ch);
-
 
     /*
     |--------------------------------------------------------------------------
-    | CHECK RESPONSE
+    | DEBUG HTTP ERROR
     |--------------------------------------------------------------------------
     */
 
@@ -205,14 +213,13 @@ function uploadToVercelBlob(
             'Vercel Blob upload failed. HTTP ' .
             $httpCode .
             '. Response: ' .
-            substr($response, 0, 500)
+            substr($response, 0, 1000)
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
-    | PARSE JSON RESPONSE
+    | PARSE RESPONSE
     |--------------------------------------------------------------------------
     */
 
@@ -221,21 +228,19 @@ function uploadToVercelBlob(
         true
     );
 
-
     if (
         !is_array($json) ||
         empty($json['url'])
     ) {
 
         throw new RuntimeException(
-            'Vercel Blob returned an invalid response.'
+            'Vercel Blob returned an invalid response: ' .
+            substr($response, 0, 1000)
         );
     }
 
-
     return (string) $json['url'];
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -249,22 +254,21 @@ function deleteVercelBlob(string $url): void
         return;
     }
 
-
-    $token = getenv('BLOB_READ_WRITE_TOKEN') ?: '';
-
-    if ($token === '') {
+    try {
+        $token = getBlobToken();
+    } catch (Throwable $e) {
         return;
     }
 
-
-    $ch = curl_init($url);
+    $ch = curl_init();
 
     if ($ch === false) {
         return;
     }
 
-
     curl_setopt_array($ch, [
+
+        CURLOPT_URL => $url,
 
         CURLOPT_CUSTOMREQUEST => 'DELETE',
 
@@ -280,16 +284,18 @@ function deleteVercelBlob(string $url): void
 
         CURLOPT_CONNECTTIMEOUT => 10,
 
-        CURLOPT_TIMEOUT => 30
+        CURLOPT_TIMEOUT => 30,
+
+        CURLOPT_SSL_VERIFYPEER => true,
+
+        CURLOPT_SSL_VERIFYHOST => 2
 
     ]);
-
 
     curl_exec($ch);
 
     curl_close($ch);
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -298,7 +304,6 @@ function deleteVercelBlob(string $url): void
 */
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
 
     /*
     |--------------------------------------------------------------------------
@@ -340,7 +345,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_POST['message'] ?? ''
     );
 
-
     /*
     |--------------------------------------------------------------------------
     | BASIC VALIDATION
@@ -348,11 +352,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     */
 
     if ($full_name === '') {
-
         $errors[] =
             'Please enter your full name.';
     }
-
 
     if ($email === '') {
 
@@ -370,27 +372,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'Please enter a valid email address.';
     }
 
-
     if ($phone === '') {
-
         $errors[] =
             'Please enter your phone number.';
     }
 
-
     if ($education === '') {
-
         $errors[] =
             'Please enter your educational qualification.';
     }
 
-
     if ($address === '') {
-
         $errors[] =
             'Please enter your address.';
     }
-
 
     if (
         !in_array(
@@ -404,7 +399,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'Please select whether you have access to a computer.';
     }
 
-
     if (
         !in_array(
             $laptop_available,
@@ -416,7 +410,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] =
             'Please select whether you have access to a laptop.';
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -432,6 +425,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'image/webp' => 'webp'
     ];
 
+    $photoMime = '';
 
     if (
         !$photo ||
@@ -451,7 +445,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     } else {
 
-
         /*
         |--------------------------------------------------------------------------
         | PHOTO SIZE
@@ -467,14 +460,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'Photo size must not exceed 500KB.';
         }
 
-
         /*
         |--------------------------------------------------------------------------
         | PHOTO MIME
         |--------------------------------------------------------------------------
         */
-
-        $photoMime = '';
 
         if (
             isset($photo['tmp_name']) &&
@@ -491,7 +481,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ) ?: '';
         }
 
-
         if (
             !isset(
                 $allowedPhotoTypes[$photoMime]
@@ -502,7 +491,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'Photo must be JPG, PNG or WEBP.';
         }
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -518,6 +506,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'docx'
     ];
 
+    $cvExtension = '';
 
     if (
         !$cv ||
@@ -537,7 +526,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     } else {
 
-
         /*
         |--------------------------------------------------------------------------
         | CV SIZE
@@ -553,7 +541,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'CV size must not exceed 5MB.';
         }
 
-
         /*
         |--------------------------------------------------------------------------
         | CV EXTENSION
@@ -566,7 +553,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 PATHINFO_EXTENSION
             )
         );
-
 
         if (
             !in_array(
@@ -581,7 +567,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | UPLOAD + DATABASE
@@ -589,39 +574,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     */
 
     $photoUrl = null;
-
     $cvUrl = null;
-
 
     if (empty($errors)) {
 
         try {
 
-
             /*
             |--------------------------------------------------------------------------
-            | PHOTO MIME
+            | PHOTO EXTENSION
             |--------------------------------------------------------------------------
             */
-
-            $finfo = new finfo(
-                FILEINFO_MIME_TYPE
-            );
-
-
-            $photoMime =
-                $finfo->file(
-                    $photo['tmp_name']
-                ) ?: '';
-
 
             $photoExtension =
                 $allowedPhotoTypes[$photoMime];
 
-
             /*
             |--------------------------------------------------------------------------
-            | UNIQUE PHOTO PATH
+            | PHOTO PATH
             |--------------------------------------------------------------------------
             */
 
@@ -637,7 +607,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 '.' .
                 $photoExtension;
 
-
             /*
             |--------------------------------------------------------------------------
             | UPLOAD PHOTO
@@ -651,36 +620,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $photoMime
                 );
 
-
             /*
             |--------------------------------------------------------------------------
             | CV CONTENT TYPE
             |--------------------------------------------------------------------------
             */
 
-            $cvMime = 'application/octet-stream';
+            switch ($cvExtension) {
 
+                case 'pdf':
 
-            if ($cvExtension === 'pdf') {
+                    $cvMime =
+                        'application/pdf';
 
-                $cvMime =
-                    'application/pdf';
+                    break;
 
-            } elseif ($cvExtension === 'doc') {
+                case 'doc':
 
-                $cvMime =
-                    'application/msword';
+                    $cvMime =
+                        'application/msword';
 
-            } elseif ($cvExtension === 'docx') {
+                    break;
 
-                $cvMime =
-                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+                case 'docx':
+
+                    $cvMime =
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+                    break;
+
+                default:
+
+                    $cvMime =
+                        'application/octet-stream';
             }
-
 
             /*
             |--------------------------------------------------------------------------
-            | UNIQUE CV PATH
+            | CV PATH
             |--------------------------------------------------------------------------
             */
 
@@ -696,7 +673,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 '.' .
                 $cvExtension;
 
-
             /*
             |--------------------------------------------------------------------------
             | UPLOAD CV
@@ -710,10 +686,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $cvMime
                 );
 
-
             /*
             |--------------------------------------------------------------------------
-            | INSERT INTO TIDB CLOUD
+            | DATABASE INSERT
             |--------------------------------------------------------------------------
             */
 
@@ -749,7 +724,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'pending'
                 )
             ");
-
 
             $insert->execute([
 
@@ -791,7 +765,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             ]);
 
-
             /*
             |--------------------------------------------------------------------------
             | SUCCESS
@@ -806,35 +779,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             exit;
 
-
         } catch (Throwable $e) {
-
 
             /*
             |--------------------------------------------------------------------------
-            | DELETE UPLOADED FILES
+            | DELETE PHOTO IF CV/DB FAILED
             |--------------------------------------------------------------------------
             */
 
-            if (
-                $photoUrl !== null
-            ) {
+            if ($photoUrl !== null) {
 
                 deleteVercelBlob(
                     $photoUrl
                 );
             }
 
+            /*
+            |--------------------------------------------------------------------------
+            | DELETE CV IF DB FAILED
+            |--------------------------------------------------------------------------
+            */
 
-            if (
-                $cvUrl !== null
-            ) {
+            if ($cvUrl !== null) {
 
                 deleteVercelBlob(
                     $cvUrl
                 );
             }
-
 
             /*
             |--------------------------------------------------------------------------
@@ -847,24 +818,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $e->getMessage()
             );
 
-
             /*
             |--------------------------------------------------------------------------
-            | USER ERROR
+            | SHOW REAL ERROR TEMPORARILY
             |--------------------------------------------------------------------------
+            |
+            | This is useful while fixing production.
+            |
             */
 
             $errors[] =
-                'Something went wrong while submitting your application. Please try again.';
+                'Application failed: ' .
+                $e->getMessage();
         }
     }
 }
 
+/*
+|--------------------------------------------------------------------------
+| HEADER
+|--------------------------------------------------------------------------
+*/
 
 include __DIR__ . '/includes/header.php';
 
 ?>
-
 
 <!-- =========================================================
      APPLY HERO
@@ -905,7 +883,6 @@ include __DIR__ . '/includes/header.php';
 
 </section>
 
-
 <!-- =========================================================
      APPLICATION SECTION
 ========================================================= -->
@@ -945,7 +922,6 @@ include __DIR__ . '/includes/header.php';
         <?php else: ?>
 
             <div class="career-apply-layout">
-
 
                 <!-- JOB SUMMARY -->
 
@@ -1013,7 +989,6 @@ include __DIR__ . '/includes/header.php';
 
                 </aside>
 
-
                 <!-- FORM -->
 
                 <div class="career-application-card">
@@ -1035,7 +1010,6 @@ include __DIR__ . '/includes/header.php';
 
                     </div>
 
-
                     <?php if (!empty($errors)): ?>
 
                         <div class="application-errors">
@@ -1046,15 +1020,11 @@ include __DIR__ . '/includes/header.php';
 
                             <ul>
 
-                                <?php foreach (
-                                    $errors as $error
-                                ): ?>
+                                <?php foreach ($errors as $error): ?>
 
                                     <li>
                                         <?php
-                                        echo escape(
-                                            $error
-                                        );
+                                        echo escape($error);
                                         ?>
                                     </li>
 
@@ -1066,14 +1036,12 @@ include __DIR__ . '/includes/header.php';
 
                     <?php endif; ?>
 
-
                     <form
                         action="apply.php?job=<?php echo (int) $job_id; ?>"
                         method="POST"
                         enctype="multipart/form-data"
                         class="career-application-form"
                     >
-
 
                         <!-- PERSONAL INFORMATION -->
 
@@ -1087,9 +1055,7 @@ include __DIR__ . '/includes/header.php';
 
                         </div>
 
-
                         <div class="form-grid">
-
 
                             <div class="form-group">
 
@@ -1110,7 +1076,6 @@ include __DIR__ . '/includes/header.php';
 
                             </div>
 
-
                             <div class="form-group">
 
                                 <label for="email">
@@ -1130,7 +1095,6 @@ include __DIR__ . '/includes/header.php';
 
                             </div>
 
-
                             <div class="form-group">
 
                                 <label for="phone">
@@ -1149,7 +1113,6 @@ include __DIR__ . '/includes/header.php';
                                 >
 
                             </div>
-
 
                             <div class="form-group">
 
@@ -1171,7 +1134,6 @@ include __DIR__ . '/includes/header.php';
                             </div>
 
                         </div>
-
 
                         <!-- PHOTO -->
 
@@ -1196,7 +1158,6 @@ include __DIR__ . '/includes/header.php';
 
                         </div>
 
-
                         <!-- EXPERIENCE -->
 
                         <div class="form-group">
@@ -1216,7 +1177,6 @@ include __DIR__ . '/includes/header.php';
                             ?></textarea>
 
                         </div>
-
 
                         <!-- ADDRESS -->
 
@@ -1240,7 +1200,6 @@ include __DIR__ . '/includes/header.php';
 
                         </div>
 
-
                         <!-- EQUIPMENT -->
 
                         <div class="form-section-title">
@@ -1252,7 +1211,6 @@ include __DIR__ . '/includes/header.php';
                             Equipment Availability
 
                         </div>
-
 
                         <div class="equipment-question">
 
@@ -1283,7 +1241,6 @@ include __DIR__ . '/includes/header.php';
 
                                 </label>
 
-
                                 <label class="application-radio-option">
 
                                     <input
@@ -1306,7 +1263,6 @@ include __DIR__ . '/includes/header.php';
                             </div>
 
                         </div>
-
 
                         <div class="equipment-question">
 
@@ -1337,7 +1293,6 @@ include __DIR__ . '/includes/header.php';
 
                                 </label>
 
-
                                 <label class="application-radio-option">
 
                                     <input
@@ -1361,7 +1316,6 @@ include __DIR__ . '/includes/header.php';
 
                         </div>
 
-
                         <!-- MESSAGE -->
 
                         <div class="form-section-title">
@@ -1373,7 +1327,6 @@ include __DIR__ . '/includes/header.php';
                             Additional Information
 
                         </div>
-
 
                         <div class="form-group">
 
@@ -1392,7 +1345,6 @@ include __DIR__ . '/includes/header.php';
                             ?></textarea>
 
                         </div>
-
 
                         <!-- CV -->
 
@@ -1416,7 +1368,6 @@ include __DIR__ . '/includes/header.php';
                             </small>
 
                         </div>
-
 
                         <!-- SUBMIT -->
 
@@ -1448,6 +1399,5 @@ include __DIR__ . '/includes/header.php';
     </div>
 
 </section>
-
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
