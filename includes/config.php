@@ -1,5 +1,8 @@
 <?php
 
+declare(strict_types=1);
+
+
 /*
 |--------------------------------------------------------------------------
 | ERROR REPORTING
@@ -15,15 +18,20 @@ ini_set('display_startup_errors', '1');
 |--------------------------------------------------------------------------
 | SESSION CONFIGURATION
 |--------------------------------------------------------------------------
+|
+| Login session 30 days থাকবে।
+| Browser refresh করলে logout হবে না।
+|
 */
 
 if (session_status() === PHP_SESSION_NONE) {
 
     $isHttps =
         (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-        || (
+        ||
+        (
             isset($_SERVER['HTTP_X_FORWARDED_PROTO'])
-            && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'
+            && strtolower((string) $_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https'
         );
 
     session_set_cookie_params([
@@ -44,7 +52,10 @@ if (session_status() === PHP_SESSION_NONE) {
 |--------------------------------------------------------------------------
 */
 
-define('SITE_NAME', 'Hello Biz IT');
+define(
+    'SITE_NAME',
+    'Hello Biz IT'
+);
 
 define(
     'SITE_URL',
@@ -56,84 +67,11 @@ define(
     'https://hello-biz-it.vercel.app'
 );
 
+
+/*
+|--------------------------------------------------------------------------
+| TIMEZONE
+|--------------------------------------------------------------------------
+*/
+
 date_default_timezone_set('Asia/Dhaka');
-
-
-/*
-|--------------------------------------------------------------------------
-| DATABASE CONFIGURATION
-|--------------------------------------------------------------------------
-*/
-
-$dbHost = getenv('DB_HOST');
-$dbPort = getenv('DB_PORT') ?: '4000';
-$dbName = getenv('DB_NAME');
-$dbUser = getenv('DB_USER');
-$dbPass = getenv('DB_PASSWORD');
-
-
-/*
-|--------------------------------------------------------------------------
-| CHECK DATABASE ENVIRONMENT VARIABLES
-|--------------------------------------------------------------------------
-*/
-
-if (
-    empty($dbHost) ||
-    empty($dbName) ||
-    empty($dbUser) ||
-    empty($dbPass)
-) {
-
-    error_log(
-        'TiDB environment variables are missing.'
-    );
-
-    die('Database configuration error.');
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| DATABASE CONNECTION
-|--------------------------------------------------------------------------
-*/
-
-try {
-
-    $dsn =
-        "mysql:host={$dbHost};" .
-        "port={$dbPort};" .
-        "dbname={$dbName};" .
-        "charset=utf8mb4";
-
-
-    $pdo = new PDO(
-        $dsn,
-        $dbUser,
-        $dbPass,
-        [
-            PDO::ATTR_ERRMODE =>
-                PDO::ERRMODE_EXCEPTION,
-
-            PDO::ATTR_DEFAULT_FETCH_MODE =>
-                PDO::FETCH_ASSOC,
-
-            PDO::ATTR_EMULATE_PREPARES =>
-                false
-        ]
-    );
-
-
-} catch (PDOException $e) {
-
-    error_log(
-        'Database connection failed: ' .
-        $e->getMessage()
-    );
-
-    die(
-        'Database connection failed. ' .
-        'Please check your TiDB Cloud configuration.'
-    );
-}
